@@ -1,0 +1,36 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Sign in";
+}
+
+<div class="card mx-auto max-w-md">
+    <h1 class="mb-6 text-2xl font-bold">Sign in</h1>
+
+    <form asp-action="Login" method="post" class="space-y-4">
+        <div asp-validation-summary="ModelOnly"></div>
+        <input type="hidden" asp-for="ReturnUrl" />
+
+        <div>
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-input" autocomplete="username" />
+            <span asp-validation-for="Email"></span>
+        </div>
+
+        <div>
+            <label asp-for="Password" class="form-label"></label>
+            <input asp-for="Password" class="form-input" autocomplete="current-password" />
+            <span asp-validation-for="Password"></span>
+        </div>
+
+        <label class="flex items-center gap-2 text-sm text-slate-700">
+            <input asp-for="RememberMe" class="rounded border-slate-300" />
+            @Html.DisplayNameFor(m => m.RememberMe)
+        </label>
+
+        <button type="submit" class="btn-primary w-full">Sign in</button>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

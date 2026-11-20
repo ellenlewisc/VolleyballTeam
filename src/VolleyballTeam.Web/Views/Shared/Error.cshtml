@@ -1,0 +1,17 @@
+﻿@model ErrorViewModel
+@{
+    var notFound = Model.StatusCode == 404;
+    ViewData["Title"] = notFound ? "Not found" : "Error";
+}
+
+<div class="card mx-auto max-w-md text-center">
+    <h1 class="mb-2 text-2xl font-bold">@(notFound ? "Page not found" : "Something went wrong")</h1>
+    <p class="mb-6 text-slate-600">
+        @(notFound ? "That page doesn't exist or has moved." : "An unexpected error occurred. Please try again.")
+    </p>
+    <a class="btn-secondary" asp-controller="Home" asp-action="Index">Go home</a>
+    @if (!notFound)
+    {
+        <p class="mt-6 text-xs text-slate-400">Request ID: @Model.RequestId</p>
+    }
+</div>

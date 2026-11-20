@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/VolleyballTeam.Domain/VolleyballTeam.Domain.csproj" />
+    <Project Path="src/VolleyballTeam.Infrastructure/VolleyballTeam.Infrastructure.csproj" />
+    <Project Path="src/VolleyballTeam.Web/VolleyballTeam.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/VolleyballTeam.Tests/VolleyballTeam.Tests.csproj" />
+  </Folder>
+</Solution>
