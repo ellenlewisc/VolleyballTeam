@@ -16,6 +16,7 @@ public class ClubConfiguration : IEntityTypeConfiguration<Club>
         builder.Property(c => c.SecondaryColor).HasMaxLength(7);
         builder.Property(c => c.TimeZoneId).HasMaxLength(64);
 
+        // Unfiltered: a deleted club keeps its slug so old links never resolve to a different club.
         builder.HasIndex(c => c.Slug).IsUnique();
     }
 }

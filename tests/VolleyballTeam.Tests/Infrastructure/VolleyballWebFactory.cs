@@ -15,7 +15,11 @@ public class VolleyballWebFactory(string connectionString) : WebApplicationFacto
 {
     public HttpClient CreateClientFor(int? userId)
     {
-        var client = CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        var client = CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            BaseAddress = new Uri("https://localhost"),
+        });
         if (userId is not null)
         {
             client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, userId.Value.ToString(CultureInfo.InvariantCulture));

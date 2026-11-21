@@ -10,12 +10,12 @@ using VolleyballTeam.Infrastructure.Tenancy;
 
 namespace VolleyballTeam.Infrastructure.Seeding;
 
-public partial class DevDataSeeder(
+public partial class BootstrapSeeder(
     AppDbContext db,
     TenantContext tenant,
     UserManager<AppUser> users,
-    IOptions<DevSeedOptions> options,
-    ILogger<DevDataSeeder> logger)
+    IOptions<BootstrapOptions> options,
+    ILogger<BootstrapSeeder> logger)
 {
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
@@ -23,7 +23,7 @@ public partial class DevDataSeeder(
 
         if (string.IsNullOrWhiteSpace(settings.AdminEmail) || string.IsNullOrWhiteSpace(settings.AdminPassword))
         {
-            LogSkipped(logger, "DevSeed:AdminEmail and DevSeed:AdminPassword are not configured");
+            LogSkipped(logger, "Bootstrap:AdminEmail and Bootstrap:AdminPassword are not configured");
             return;
         }
 
@@ -41,7 +41,13 @@ public partial class DevDataSeeder(
 
         if (await db.Clubs.AnyAsync(cancellationToken))
         {
+            LogSkipped(logger, "the database already has a club");
             return;
+        }
+
+        if (string.IsNullOrWhiteSpace(settings.ClubName) || !ClubSlug.IsValid(settings.ClubSlug))
+        {
+            throw new InvalidOperationException("Bootstrap:ClubName must be set and Bootstrap:ClubSlug must be a valid, non-reserved slug.");
         }
 
         var club = new Club { Name = settings.ClubName, Slug = settings.ClubSlug, TimeZoneId = settings.TimeZoneId };
@@ -62,21 +68,26 @@ public partial class DevDataSeeder(
         if (!result.Succeeded)
         {
             throw new InvalidOperationException(
-                "Dev seed user could not be created: " + string.Join("; ", result.Errors.Select(e => e.Description)));
+                "Bootstrap owner could not be created: " + string.Join("; ", result.Errors.Select(e => e.Description)));
         }
 
-        var team = new Team { Name = "16U", Season = "2026-27", AgeGroup = "16U", Level = "Club" };
         db.ClubMemberships.Add(new ClubMembership { UserId = owner.Id, Role = ClubRole.Owner });
-        db.Teams.Add(team);
-        db.TeamMemberships.Add(new TeamMembership { UserId = owner.Id, Team = team, Role = TeamRole.HeadCoach });
+
+        if (!string.IsNullOrWhiteSpace(settings.TeamName) && !string.IsNullOrWhiteSpace(settings.TeamSeason))
+        {
+            var team = new Team { Name = settings.TeamName, Season = settings.TeamSeason };
+            db.Teams.Add(team);
+            db.TeamMemberships.Add(new TeamMembership { UserId = owner.Id, Team = team, Role = TeamRole.HeadCoach });
+        }
+
         await db.SaveChangesAsync(cancellationToken);
 
         LogSeeded(logger, club.Slug, settings.AdminEmail);
     }
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Dev seed skipped: {Reason}.")]
+    [LoggerMessage(Level = LogLevel.Information, Message = "Bootstrap skipped: {Reason}.")]
     private static partial void LogSkipped(ILogger logger, string reason);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Dev seed created club {Slug} with owner {Email}.")]
+    [LoggerMessage(Level = LogLevel.Information, Message = "Bootstrap created club {Slug} with owner {Email}.")]
     private static partial void LogSeeded(ILogger logger, string slug, string email);
 }

@@ -33,15 +33,29 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, TenantContext 
         builder.ApplyConfiguration(new TeamMembershipConfiguration());
         builder.ApplyConfiguration(new AppUserConfiguration());
 
-        // Every TenantModel must be listed here; TenantFilterCoverageTests fails the build if one is missed.
-        ApplyTenantFilter<Team>(builder);
-        ApplyTenantFilter<ClubMembership>(builder);
-        ApplyTenantFilter<TeamMembership>(builder);
+        // Every entity must be listed here; QueryFilterCoverageTests fails the build if one is missed.
+        ConfigureBaseModel<Club>(builder);
+        ApplyTenantFilters<Team>(builder);
+        ApplyTenantFilters<ClubMembership>(builder);
+        ApplyTenantFilters<TeamMembership>(builder);
     }
 
-    private void ApplyTenantFilter<TEntity>(ModelBuilder builder)
+    private static void ConfigureBaseModel<TEntity>(ModelBuilder builder)
+        where TEntity : BaseModel
+    {
+        var entity = builder.Entity<TEntity>();
+        entity.HasQueryFilter(QueryFilters.SoftDelete, e => e.DeletedAt == null);
+
+        // Accounts are deactivated, never deleted, so these never need to cascade.
+        entity.HasOne<AppUser>().WithMany().HasForeignKey(e => e.CreatedById).OnDelete(DeleteBehavior.NoAction);
+        entity.HasOne<AppUser>().WithMany().HasForeignKey(e => e.UpdatedById).OnDelete(DeleteBehavior.NoAction);
+        entity.HasOne<AppUser>().WithMany().HasForeignKey(e => e.DeletedById).OnDelete(DeleteBehavior.NoAction);
+    }
+
+    private void ApplyTenantFilters<TEntity>(ModelBuilder builder)
         where TEntity : TenantModel
     {
-        builder.Entity<TEntity>().HasQueryFilter(e => e.ClubId == CurrentClubId);
+        builder.Entity<TEntity>().HasQueryFilter(QueryFilters.Tenant, e => e.ClubId == CurrentClubId);
+        ConfigureBaseModel<TEntity>(builder);
     }
 }

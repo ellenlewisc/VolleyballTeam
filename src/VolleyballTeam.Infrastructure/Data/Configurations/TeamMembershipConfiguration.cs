@@ -24,6 +24,6 @@ public class TeamMembershipConfiguration : IEntityTypeConfiguration<TeamMembersh
             .HasForeignKey(m => m.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasIndex(m => new { m.ClubId, m.TeamId, m.UserId }).IsUnique();
+        builder.HasIndex(m => new { m.ClubId, m.TeamId, m.UserId }).IsUnique().HasFilter("[DeletedAt] IS NULL");
     }
 }

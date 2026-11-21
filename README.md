@@ -8,7 +8,7 @@ It started from a real problem: coordinating a youth club's teams, coaches and p
 
 ## Getting started
 
-**Prerequisites:** .NET SDK 10.0.301+ (pinned in `global.json`), Node.js 24+ (builds Tailwind), SQL Server LocalDB, and the EF Core CLI (`dotnet tool install --global dotnet-ef`).
+**Prerequisites:** .NET SDK 10.0.301+ (pinned in `global.json`), Node.js 24+ (builds Tailwind), and SQL Server LocalDB. Run `dotnet tool restore` once to get the pinned EF Core CLI.
 
 ```bash
 # Create the local database (first run, and after any model change)
@@ -19,7 +19,7 @@ dotnet ef database update --project src/VolleyballTeam.Infrastructure --startup-
 dotnet run --project src/VolleyballTeam.Web
 ```
 
-In Development, a demo club (`/demo-club`) and its owner account are seeded from the `DevSeed` section of `appsettings.Development.json`. Sign in with that email and password.
+On startup, if the database has no clubs and the `Bootstrap` settings include an admin email and password, the app creates the first club and its owner. Locally these come from `appsettings.Development.json` (a demo club at `/demo-club`; sign in with that email and password). In production they are set once as App Service settings, then removed. See [DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ```bash
 dotnet test   # uses LocalDB; set VBT_TEST_SQLSERVER to point at another SQL Server
@@ -61,5 +61,7 @@ While editing views, run `npm run css:watch` in `src/VolleyballTeam.Web` for liv
 | [0007](docs/adr/0007-low-cost-azure-hosting.md) | Low-cost Azure hosting | Accepted |
 | [0008](docs/adr/0008-aspnet-identity-invite-only.md) | ASP.NET Core Identity, invite-only | Accepted |
 | [0009](docs/adr/0009-mcp-server-future-phase.md) | MCP server as a future phase | Proposed |
+| [0010](docs/adr/0010-apply-migrations-in-deploy-pipeline.md) | Apply migrations in the deploy pipeline | Accepted |
+| [0011](docs/adr/0011-soft-delete-and-deactivation.md) | Soft delete and user deactivation | Accepted |
 
 New decisions use the [ADR template](docs/adr/0000-template.md).

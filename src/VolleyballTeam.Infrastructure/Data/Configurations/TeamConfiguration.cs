@@ -21,6 +21,6 @@ public class TeamConfiguration : IEntityTypeConfiguration<Team>
             .HasForeignKey(t => t.ClubId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(t => new { t.ClubId, t.Season, t.Name }).IsUnique();
+        builder.HasIndex(t => new { t.ClubId, t.Season, t.Name }).IsUnique().HasFilter("[DeletedAt] IS NULL");
     }
 }

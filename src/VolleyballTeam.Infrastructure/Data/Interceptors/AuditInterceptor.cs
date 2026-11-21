@@ -2,10 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using VolleyballTeam.Domain;
 using VolleyballTeam.Domain.Entities;
+using VolleyballTeam.Infrastructure.Auditing;
 
 namespace VolleyballTeam.Infrastructure.Data.Interceptors;
 
-public class TimestampInterceptor(TimeProvider clock) : SaveChangesInterceptor
+public class AuditInterceptor(TimeProvider clock, CurrentUser currentUser) : SaveChangesInterceptor
 {
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
     {
@@ -31,17 +32,23 @@ public class TimestampInterceptor(TimeProvider clock) : SaveChangesInterceptor
 
         context.ChangeTracker.DetectChanges();
         var now = clock.GetUtcNow().UtcDateTime;
+        var userId = currentUser.UserId;
 
         foreach (var entry in context.ChangeTracker.Entries<BaseModel>())
         {
             if (entry.State == EntityState.Added)
             {
                 entry.Entity.CreatedAt = now;
+                entry.Entity.CreatedById = userId;
                 entry.Entity.UpdatedAt = now;
+                entry.Entity.UpdatedById = userId;
             }
             else if (entry.State == EntityState.Modified)
             {
+                entry.Property(e => e.CreatedAt).IsModified = false;
+                entry.Property(e => e.CreatedById).IsModified = false;
                 entry.Entity.UpdatedAt = now;
+                entry.Entity.UpdatedById = userId;
             }
         }
 
@@ -54,6 +61,7 @@ public class TimestampInterceptor(TimeProvider clock) : SaveChangesInterceptor
             }
             else if (entry.State == EntityState.Modified)
             {
+                entry.Property(e => e.CreatedAt).IsModified = false;
                 entry.Entity.UpdatedAt = now;
             }
         }

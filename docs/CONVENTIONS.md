@@ -3,12 +3,14 @@
 Coding standards for this repo. They apply to human and AI-assisted changes alike.
 
 ## Data & EF Core
-- Every entity extends `BaseModel` (`Id`, `CreatedAt`, `UpdatedAt`). Tenant-owned entities extend `TenantModel` (adds `ClubId`).
+- Every entity extends `BaseModel` (`Id`, `CreatedAt`/`CreatedById`, `UpdatedAt`/`UpdatedById`, `DeletedAt`/`DeletedById`), stamped automatically; never set them by hand. Tenant-owned entities extend `TenantModel` (adds `ClubId`).
 - Store enums as strings (`HasConversion<string>()`).
 - Use plain LINQ (`.Contains()`, `.StartsWith()`), not `EF.Functions`.
 - Raw SQL references actual table names, never `DbSet` property names.
-- Migrations are created and applied manually by the maintainer; never at app startup or in CI.
-- Never bypass tenant filters (`IgnoreQueryFilters()`) outside tenant resolution and platform-admin code.
+- Migrations are created by the maintainer (`dotnet ef migrations add`) and applied to production by the deploy pipeline; never at app startup.
+- Migrations must be safe to run before the new code is live: add first, and drop or rename only in a later release.
+- Never bypass tenant filters outside tenant resolution and platform-admin code. To see deleted rows, ignore only the soft-delete filter: `IgnoreQueryFilters([QueryFilters.SoftDelete])`.
+- Nothing is hard-deleted. `Remove()` soft-deletes (sets `DeletedAt`), and unique indexes are filtered on `[DeletedAt] IS NULL`. People are deactivated, not deleted ([ADR 0011](adr/0011-soft-delete-and-deactivation.md)).
 
 ## Architecture
 - Business logic goes in services in `Infrastructure`. Controllers stay thin.
@@ -20,6 +22,7 @@ Coding standards for this repo. They apply to human and AI-assisted changes alik
 ## Authorization
 - Gate controllers and actions with `[Authorize]` / policies. Use `[AllowAnonymous]` for the few public actions.
 - No manual `IsAuthenticated` checks and redirects.
+- Anything that grants access checks that the account and the club membership are active (`DeactivatedAt == null`).
 
 ## Front end
 - Tailwind CSS for styling.

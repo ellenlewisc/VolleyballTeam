@@ -18,6 +18,8 @@ public class ClubMembershipConfiguration : IEntityTypeConfiguration<ClubMembersh
             .HasForeignKey(m => m.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasIndex(m => new { m.ClubId, m.UserId }).IsUnique();
+        builder.Ignore(m => m.IsActive);
+
+        builder.HasIndex(m => new { m.ClubId, m.UserId }).IsUnique().HasFilter("[DeletedAt] IS NULL");
     }
 }

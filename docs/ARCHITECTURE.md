@@ -48,17 +48,28 @@ sequenceDiagram
 
 ### Enforcement layers
 
-1. **Read side:** an EF Core global query filter `e => e.ClubId == _tenant.ClubId` is applied to every `TenantModel` type, configured in one loop in `OnModelCreating`. A forgotten `Where` can't leak rows.
+1. **Read side:** a named EF Core query filter (`QueryFilters.Tenant`, `e => e.ClubId == CurrentClubId`) is applied to every `TenantModel` type in `OnModelCreating`. A forgotten `Where` can't leak rows. A second named filter hides soft-deleted rows ([ADR 0011](adr/0011-soft-delete-and-deactivation.md)), and code can ignore that one without dropping the tenant filter.
 2. **Write side:** a `SaveChangesInterceptor` sets `ClubId` on added entities and throws if a modified or added entity's `ClubId` doesn't match the current tenant.
 3. **Database keys:** child rows reference their parent by `(ClubId, ParentId)` against an alternate key on the parent. For example, a `TeamMembership` can only point at a team in its own club, and SQL Server itself rejects anything else.
 4. **Authorization:** `[Authorize]` on controllers, a club-membership requirement, and resource-based handlers for team access using `TeamRole`.
 5. **Tests:** seed two clubs, then assert through services *and* HTTP endpoints that club A never sees, edits or deletes club B's data. These run in CI on every push.
 
-`IgnoreQueryFilters()` is allowed only in tenant resolution and platform-admin code, and every use is covered by a test.
+Ignoring `QueryFilters.Tenant` is allowed only in tenant resolution and platform-admin code, and every use is covered by a test.
 
 Club slugs are lowercase and URL-safe, and top-level route names (`account`, `error`, `admin`…) are reserved, so a club can never shadow an app route (`ClubSlug` and the `clubslug` route constraint).
 
 EF Core's SQL Server retry strategy is enabled, so requests survive the free-tier database resuming from auto-pause.
+
+## Security
+
+| Concern | How |
+|---|---|
+| Sign-in | ASP.NET Core Identity: confirmed email required, 10+ character passwords, lockout for 15 minutes after 5 failures, and a per-IP rate limit (10 attempts a minute) on the login form. |
+| Inactive people | `AppSignInManager` refuses sign-in for deactivated accounts and rejects their existing cookies at the next security-stamp check (every 5 minutes). The club-membership handler checks account and membership status on every request. |
+| Cookies | `HttpOnly`, `SameSite=Lax`, HTTPS-only outside Development; 14-day sliding expiry. |
+| CSRF | Antiforgery validation on every unsafe request through a global `AutoValidateAntiforgeryToken` filter. |
+| Headers | `Content-Security-Policy` (scripts from this site only, no framing), `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS outside Development, and `Cache-Control: no-store` on signed-in pages. |
+| Proxy | Forwarded headers trust one hop, the App Service front end, so client IPs and HTTPS are seen correctly. |
 
 ## Front end
 
@@ -86,4 +97,4 @@ Config follows the Options pattern: `Config/<Service>Options.cs` bound from a ro
 
 ## Deployment
 
-GitHub Actions: restore → Tailwind build → build → test → publish → deploy to Azure App Service. Migrations are generated and applied by the developer, not by CI or at app startup. See [ADR 0007](adr/0007-low-cost-azure-hosting.md).
+Push to `main` → **CI** (Tailwind build → build → test against SQL Server) → **Deploy** (publish → build an EF Core migration bundle → apply migrations to Azure SQL → deploy to App Service). A failed test or migration stops the deploy. Migrations are written by the developer and applied by the pipeline, never at app startup. See [ADR 0007](adr/0007-low-cost-azure-hosting.md), [ADR 0010](adr/0010-apply-migrations-in-deploy-pipeline.md) and [DEPLOYMENT.md](DEPLOYMENT.md).

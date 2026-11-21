@@ -11,7 +11,7 @@ public class TeamService(AppDbContext db)
     public async Task<List<TeamSummary>> GetTeamsForUserAsync(int userId, CancellationToken cancellationToken = default)
     {
         var clubRole = await db.ClubMemberships
-            .Where(m => m.UserId == userId)
+            .Where(m => m.UserId == userId && m.DeactivatedAt == null)
             .Select(m => (ClubRole?)m.Role)
             .SingleOrDefaultAsync(cancellationToken);
 

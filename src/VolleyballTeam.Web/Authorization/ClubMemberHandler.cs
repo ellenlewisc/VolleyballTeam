@@ -17,7 +17,8 @@ public class ClubMemberHandler(TenantContext tenant, AppDbContext db) : Authoriz
             return;
         }
 
-        if (await db.ClubMemberships.AnyAsync(m => m.UserId == userId))
+        // Checked on every request so deactivation takes effect immediately, not at the next cookie revalidation.
+        if (await db.ClubMemberships.AnyAsync(m => m.UserId == userId && m.DeactivatedAt == null && m.User!.DeactivatedAt == null))
         {
             context.Succeed(requirement);
         }

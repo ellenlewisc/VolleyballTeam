@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using VolleyballTeam.Domain.Entities;
+using VolleyballTeam.Web.Security;
 using VolleyballTeam.Web.ViewModels;
 
 namespace VolleyballTeam.Web.Controllers;
@@ -17,6 +19,7 @@ public class AccountController(SignInManager<AppUser> signInManager) : Controlle
     [AllowAnonymous]
     [HttpPost("login")]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting(RateLimitPolicies.Login)]
     public async Task<IActionResult> Login(LoginViewModel model)
     {
         if (!ModelState.IsValid)
