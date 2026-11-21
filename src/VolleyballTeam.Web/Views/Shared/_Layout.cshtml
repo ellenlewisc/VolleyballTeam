@@ -1,0 +1,56 @@
+﻿@using VolleyballTeam.Infrastructure.Tenancy
+@using VolleyballTeam.Web.Tenancy
+@inject TenantContext Tenant
+@{
+    var club = Tenant.Club;
+    var brand = club?.Name ?? "Volleyball Team Manager";
+}
+<!DOCTYPE html>
+<html lang="en" style="@ClubTheme.CssVariables(club)">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] · @brand</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="flex min-h-screen flex-col bg-slate-50 text-slate-900 antialiased">
+    <header class="bg-club text-white shadow">
+        <div class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
+            @if (club is not null)
+            {
+                <a class="text-lg font-bold tracking-tight" asp-controller="Club" asp-action="Index" asp-route-club="@club.Slug">@club.Name</a>
+            }
+            else
+            {
+                <a class="text-lg font-bold tracking-tight" asp-controller="Home" asp-action="Index">@brand</a>
+            }
+
+            <nav class="flex items-center gap-3 text-sm">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <span class="hidden opacity-90 sm:inline">@User.Identity.Name</span>
+                    <form asp-controller="Account" asp-action="Logout" method="post">
+                        <button type="submit" class="rounded-md bg-white/15 px-3 py-1.5 font-semibold hover:bg-white/25">Sign out</button>
+                    </form>
+                }
+                else
+                {
+                    <a class="rounded-md bg-white/15 px-3 py-1.5 font-semibold hover:bg-white/25" asp-controller="Account" asp-action="Login">Sign in</a>
+                }
+            </nav>
+        </div>
+        <div class="h-1 bg-club-accent"></div>
+    </header>
+
+    <main class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+        @RenderBody()
+    </main>
+
+    <footer class="border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+        Volleyball Team Manager
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

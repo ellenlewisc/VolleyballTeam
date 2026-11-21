@@ -1,0 +1,27 @@
+@model ChooseClubViewModel
+@{
+    ViewData["Title"] = "Choose a club";
+}
+
+<h1 class="mb-6 text-2xl font-bold">Choose a club</h1>
+
+@if (Model.Clubs.Count == 0)
+{
+    <div class="card text-slate-600">
+        Your account isn't part of any club yet. Ask your club admin or coach to send you an invitation.
+    </div>
+}
+else
+{
+    <ul class="grid gap-4 sm:grid-cols-2">
+        @foreach (var club in Model.Clubs)
+        {
+            <li>
+                <a class="card block hover:border-slate-300 hover:shadow" asp-controller="Club" asp-action="Index" asp-route-club="@club.Slug">
+                    <span class="block text-lg font-semibold">@club.Name</span>
+                    <span class="text-sm text-slate-500">@club.Role</span>
+                </a>
+            </li>
+        }
+    </ul>
+}

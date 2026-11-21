@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\VolleyballTeam.Infrastructure\VolleyballTeam.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="package.json;package-lock.json" />
+    <None Include="package.json;package-lock.json" />
+  </ItemGroup>
+
+  <Target Name="TailwindInstall" Condition="!Exists('node_modules')">
+    <Exec Command="npm ci" />
+  </Target>
+
+  <Target Name="TailwindBuild" BeforeTargets="BeforeBuild" DependsOnTargets="TailwindInstall"
+          Inputs="Styles/app.css;@(Content->WithMetadataValue('Extension', '.cshtml'))"
+          Outputs="wwwroot/css/site.css">
+    <Exec Command="npm run css:build" />
+  </Target>
+
+  <Target Name="TailwindIncludeOutput" AfterTargets="TailwindBuild">
+    <ItemGroup>
+      <Content Include="wwwroot/css/site.css" Exclude="@(Content)" />
+    </ItemGroup>
+  </Target>
+
+</Project>
