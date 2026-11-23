@@ -1,0 +1,42 @@
+@model TeamSeasonEditViewModel
+@{
+    ViewData["Title"] = "Edit team";
+    var slug = Tenant.Club!.Slug;
+}
+
+<div class="card mx-auto max-w-lg">
+    <h1 class="mb-1 text-2xl font-bold">Edit team</h1>
+    <p class="mb-6 text-sm text-slate-500">@Model.SeasonName season</p>
+
+    <form method="post" asp-action="Edit" asp-route-club="@slug" asp-route-id="@Model.Id" class="space-y-4">
+        <div asp-validation-summary="ModelOnly"></div>
+
+        <div>
+            <label asp-for="DisplayName" class="form-label"></label>
+            <input asp-for="DisplayName" class="form-input" />
+            <span asp-validation-for="DisplayName"></span>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+                <label asp-for="AgeGroup" class="form-label"></label>
+                <input asp-for="AgeGroup" class="form-input" />
+                <span asp-validation-for="AgeGroup"></span>
+            </div>
+            <div>
+                <label asp-for="Level" class="form-label"></label>
+                <input asp-for="Level" class="form-input" />
+                <span asp-validation-for="Level"></span>
+            </div>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="submit" class="btn-primary">Save</button>
+            <a class="btn-secondary" asp-action="Show" asp-route-club="@slug" asp-route-id="@Model.Id">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

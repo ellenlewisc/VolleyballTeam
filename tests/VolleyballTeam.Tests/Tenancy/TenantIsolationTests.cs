@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using VolleyballTeam.Domain.Entities;
 using VolleyballTeam.Domain.Enums;
+using VolleyballTeam.Infrastructure.Access;
 using VolleyballTeam.Infrastructure.Services;
 using VolleyballTeam.Infrastructure.Tenancy;
 using VolleyballTeam.Tests.Infrastructure;
@@ -17,12 +18,16 @@ public class TenantIsolationTests(DatabaseFixture fixture)
 
         var teams = await db.Teams.ToListAsync();
         var clubMemberships = await db.ClubMemberships.ToListAsync();
-        var teamMemberships = await db.TeamMemberships.ToListAsync();
+        var seasons = await db.Seasons.ToListAsync();
+        var teamSeasons = await db.TeamSeasons.ToListAsync();
+        var staff = await db.TeamSeasonStaff.ToListAsync();
 
         Assert.NotEmpty(teams);
         Assert.All(teams, t => Assert.Equal(fixture.Alpha.Club.Id, t.ClubId));
         Assert.All(clubMemberships, m => Assert.Equal(fixture.Alpha.Club.Id, m.ClubId));
-        Assert.All(teamMemberships, m => Assert.Equal(fixture.Alpha.Club.Id, m.ClubId));
+        Assert.All(seasons, s => Assert.Equal(fixture.Alpha.Club.Id, s.ClubId));
+        Assert.All(teamSeasons, t => Assert.Equal(fixture.Alpha.Club.Id, t.ClubId));
+        Assert.All(staff, s => Assert.Equal(fixture.Alpha.Club.Id, s.ClubId));
     }
 
     [Fact]
@@ -48,7 +53,7 @@ public class TenantIsolationTests(DatabaseFixture fixture)
     public async Task New_rows_are_stamped_with_the_current_club()
     {
         await using var db = fixture.CreateContextFor(fixture.Alpha.Club);
-        var team = new Team { Name = $"Stamped {Guid.NewGuid():N}", Season = "2026-27" };
+        var team = new Team { Name = $"Stamped {Guid.NewGuid():N}" };
 
         db.Teams.Add(team);
         await db.SaveChangesAsync();
@@ -61,7 +66,7 @@ public class TenantIsolationTests(DatabaseFixture fixture)
     public async Task Adding_a_row_for_another_club_throws()
     {
         await using var db = fixture.CreateContextFor(fixture.Alpha.Club);
-        db.Teams.Add(new Team { ClubId = fixture.Bravo.Club.Id, Name = "Sneaky", Season = "2026-27" });
+        db.Teams.Add(new Team { ClubId = fixture.Bravo.Club.Id, Name = "Sneaky" });
 
         await Assert.ThrowsAsync<TenantViolationException>(() => db.SaveChangesAsync());
     }
@@ -70,7 +75,7 @@ public class TenantIsolationTests(DatabaseFixture fixture)
     public async Task Saving_without_a_club_throws()
     {
         await using var db = fixture.CreateContext(new TenantContext());
-        db.Teams.Add(new Team { Name = "Orphan", Season = "2026-27" });
+        db.Teams.Add(new Team { Name = "Orphan" });
 
         await Assert.ThrowsAsync<TenantViolationException>(() => db.SaveChangesAsync());
     }
@@ -121,14 +126,28 @@ public class TenantIsolationTests(DatabaseFixture fixture)
     }
 
     [Fact]
-    public async Task Database_rejects_a_membership_that_points_at_another_clubs_team()
+    public async Task Database_rejects_staff_that_points_at_another_clubs_team_season()
     {
         await using var db = fixture.CreateContextFor(fixture.Alpha.Club);
-        db.TeamMemberships.Add(new TeamMembership
+        db.TeamSeasonStaff.Add(new TeamSeasonStaff
         {
             UserId = fixture.Alpha.CoachUserId,
-            TeamId = fixture.Bravo.TeamId,
-            Role = TeamRole.AssistantCoach,
+            TeamSeasonId = fixture.Bravo.TeamSeasonId,
+            Role = StaffRole.AssistantCoach,
+        });
+
+        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+    }
+
+    [Fact]
+    public async Task Database_rejects_a_team_season_that_mixes_clubs()
+    {
+        await using var db = fixture.CreateContextFor(fixture.Alpha.Club);
+        db.TeamSeasons.Add(new TeamSeason
+        {
+            TeamId = fixture.Alpha.TeamId,
+            SeasonId = fixture.Bravo.SeasonId,
+            DisplayName = $"Mixed {Guid.NewGuid():N}",
         });
 
         await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
@@ -138,9 +157,9 @@ public class TenantIsolationTests(DatabaseFixture fixture)
     public async Task Team_service_returns_nothing_for_a_user_outside_the_club()
     {
         await using var db = fixture.CreateContextFor(fixture.Bravo.Club);
-        var teams = new TeamService(db);
+        var teams = new TeamService(db, new TeamSeasonAccessService(db));
 
-        var result = await teams.GetTeamsForUserAsync(fixture.Alpha.CoachUserId);
+        var result = await teams.GetTeamSeasonsForUserAsync(fixture.Alpha.CoachUserId);
 
         Assert.Empty(result);
     }

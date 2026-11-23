@@ -12,19 +12,19 @@ public class SoftDeleteTests(DatabaseFixture fixture)
     [Fact]
     public async Task Removing_a_row_keeps_it_with_a_deleted_timestamp()
     {
-        var userId = await fixture.AddMemberAsync(fixture.Alpha.Club, fixture.Alpha.TeamId);
+        var userId = await fixture.AddMemberAsync(fixture.Alpha.Club, fixture.Alpha.TeamSeasonId);
 
         await using (var db = fixture.CreateContextFor(fixture.Alpha.Club))
         {
-            var membership = await db.TeamMemberships.SingleAsync(m => m.UserId == userId);
-            db.TeamMemberships.Remove(membership);
+            var membership = await db.TeamSeasonStaff.SingleAsync(m => m.UserId == userId);
+            db.TeamSeasonStaff.Remove(membership);
             await db.SaveChangesAsync();
         }
 
         await using var verify = fixture.CreateContextFor(fixture.Alpha.Club);
-        Assert.False(await verify.TeamMemberships.AnyAsync(m => m.UserId == userId));
+        Assert.False(await verify.TeamSeasonStaff.AnyAsync(m => m.UserId == userId));
 
-        var kept = await verify.TeamMemberships
+        var kept = await verify.TeamSeasonStaff
             .IgnoreQueryFilters([QueryFilters.SoftDelete])
             .SingleAsync(m => m.UserId == userId);
         Assert.NotNull(kept.DeletedAt);
@@ -43,28 +43,28 @@ public class SoftDeleteTests(DatabaseFixture fixture)
     [Fact]
     public async Task A_removed_membership_can_be_added_again()
     {
-        var userId = await fixture.AddMemberAsync(fixture.Alpha.Club, fixture.Alpha.TeamId);
+        var userId = await fixture.AddMemberAsync(fixture.Alpha.Club, fixture.Alpha.TeamSeasonId);
 
         await using (var db = fixture.CreateContextFor(fixture.Alpha.Club))
         {
-            db.TeamMemberships.Remove(await db.TeamMemberships.SingleAsync(m => m.UserId == userId));
+            db.TeamSeasonStaff.Remove(await db.TeamSeasonStaff.SingleAsync(m => m.UserId == userId));
             await db.SaveChangesAsync();
         }
 
         await using (var db = fixture.CreateContextFor(fixture.Alpha.Club))
         {
-            db.TeamMemberships.Add(new TeamMembership { UserId = userId, TeamId = fixture.Alpha.TeamId, Role = TeamRole.Parent });
+            db.TeamSeasonStaff.Add(new TeamSeasonStaff { UserId = userId, TeamSeasonId = fixture.Alpha.TeamSeasonId, Role = StaffRole.TeamManager });
             await db.SaveChangesAsync();
         }
 
         await using var verify = fixture.CreateContextFor(fixture.Alpha.Club);
-        Assert.Equal(1, await verify.TeamMemberships.CountAsync(m => m.UserId == userId));
+        Assert.Equal(1, await verify.TeamSeasonStaff.CountAsync(m => m.UserId == userId));
     }
 
     [Fact]
     public async Task A_removed_team_disappears_from_queries()
     {
-        var team = new Team { Name = $"Removed {Guid.NewGuid():N}", Season = "2026-27" };
+        var team = new Team { Name = $"Removed {Guid.NewGuid():N}" };
         await using (var db = fixture.CreateContextFor(fixture.Alpha.Club))
         {
             db.Teams.Add(team);

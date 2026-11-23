@@ -1,0 +1,10 @@
+@model SeasonStatus
+@{
+    var classes = Model switch
+    {
+        SeasonStatus.Active => "bg-green-100 text-green-800",
+        SeasonStatus.Upcoming => "bg-sky-100 text-sky-800",
+        _ => "bg-slate-200 text-slate-700",
+    };
+}
+<span class="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium @classes">@Model</span>

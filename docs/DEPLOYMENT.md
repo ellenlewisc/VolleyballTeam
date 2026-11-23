@@ -32,7 +32,7 @@ dotnet ef database update --project src/VolleyballTeam.Infrastructure --startup-
 
 Portal → **App Services** → **Create** → **Web App**.
 
-1. **Basics:** resource group `rg-volleyball`, a globally unique name (it becomes `<name>.azurewebsites.net`), **Publish: Code**, **Runtime stack: .NET 10 (LTS)**, **OS: Linux**, same region.
+1. **Basics:** resource group `rg-volleyball`, a name (newer apps get a unique hostname such as `<name>-<random>.<region>.azurewebsites.net`; see **Overview → Default domain**), **Publish: Code**, **Runtime stack: .NET 10 (LTS)**, **OS: Linux**, same region.
 2. **Pricing plan:** create a new Linux plan and choose **Free F1**. Use *Explore pricing plans* if it defaults to a paid tier.
 3. **Deployment:** leave continuous deployment **disabled**; this repo has its own workflow.
 4. **Monitoring:** Application Insights **No** (it can be added later).
@@ -76,7 +76,7 @@ Merge to `main`. CI runs, and when it passes, the **Deploy** workflow:
 
 If the migration step fails, nothing is deployed. The workflow can also be run manually from **Actions → Deploy → Run workflow**. If the migration step reports that the client IP isn't allowed, confirm **Allow Azure services and resources to access this server** is ticked on the SQL server's **Networking** page.
 
-The first start creates your club and owner account from the bootstrap settings. Browse to `https://<name>.azurewebsites.net`, sign in, and confirm you land on `/<your-slug>`.
+The first start creates your club and owner account from the bootstrap settings. Browse to the app's **Default domain**, sign in, and confirm you land on `/<your-slug>`.
 
 ## 8. Remove the bootstrap password
 

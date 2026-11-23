@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using VolleyballTeam.Domain.Entities;
+using VolleyballTeam.Domain.Enums;
 using VolleyballTeam.Infrastructure;
 using VolleyballTeam.Infrastructure.Data;
 using VolleyballTeam.Infrastructure.Seeding;
@@ -70,10 +71,14 @@ builder.Services.AddRateLimiter(options =>
 });
 
 builder.Services.AddScoped<IAuthorizationHandler, ClubMemberHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, TeamSeasonAccessHandler>();
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy(Policies.ClubMember, policy => policy
         .RequireAuthenticatedUser()
-        .AddRequirements(new ClubMemberRequirement()));
+        .AddRequirements(new ClubMemberRequirement()))
+    .AddPolicy(Policies.ClubAdmin, policy => policy
+        .RequireAuthenticatedUser()
+        .AddRequirements(new ClubMemberRequirement(ClubRole.Owner, ClubRole.Admin)));
 
 builder.Services.AddRouting(options =>
 {

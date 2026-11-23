@@ -1,0 +1,101 @@
+@model RolloverViewModel
+@{
+    var plan = Model.Plan!;
+    var slug = Tenant.Club!.Slug;
+    ViewData["Title"] = $"Roll teams into {plan.Target.Name}";
+}
+
+<h1 class="mb-1 text-2xl font-bold">Roll teams into @plan.Target.Name</h1>
+<p class="mb-6 text-sm text-slate-600">
+    Each ticked team continues as the same team in @plan.Target.Name, keeping its history.
+    Change its name, age group or level for the new season (for example 16U → 17U), and choose which staff come along.
+    Brand-new teams are added from <a class="font-medium text-club underline" asp-controller="Teams" asp-action="Create" asp-route-club="@slug">New team</a>.
+</p>
+
+@if (plan.Sources.Count == 0)
+{
+    <div class="card text-slate-600">There are no other seasons to roll teams from yet.</div>
+    return;
+}
+
+<form method="get" asp-action="Rollover" asp-route-club="@slug" asp-route-id="@plan.Target.Id" class="mb-6 flex flex-wrap items-end gap-3">
+    <div>
+        <label for="from" class="form-label">Copy teams from</label>
+        <select id="from" name="from" class="form-input">
+            @foreach (var source in plan.Sources)
+            {
+                <option value="@source.Id" selected="@(source.Id == plan.SourceSeasonId)">@source.Name</option>
+            }
+        </select>
+    </div>
+    <button type="submit" class="btn-secondary">Show teams</button>
+</form>
+
+@if (plan.Candidates.Count == 0)
+{
+    <div class="card text-slate-600">That season has no teams.</div>
+    return;
+}
+
+<form method="post" asp-action="Rollover" asp-route-club="@slug" asp-route-id="@plan.Target.Id" class="space-y-4">
+    <div asp-validation-summary="ModelOnly"></div>
+    <input type="hidden" asp-for="SourceSeasonId" />
+
+    @for (var i = 0; i < plan.Candidates.Count; i++)
+    {
+        var candidate = plan.Candidates[i];
+        var row = Model.Rows.FirstOrDefault(r => r.SourceTeamSeasonId == candidate.SourceTeamSeasonId) ?? new RolloverRowInput();
+
+        <fieldset class="card space-y-4 @(candidate.AlreadyInTarget ? "opacity-60" : "")" disabled="@candidate.AlreadyInTarget">
+            <input type="hidden" name="Rows[@i].SourceTeamSeasonId" value="@candidate.SourceTeamSeasonId" />
+
+            <label class="flex items-center gap-3">
+                <input type="checkbox" name="Rows[@i].Include" value="true" checked="@row.Include" class="size-4 rounded border-slate-300" />
+                <span>
+                    <span class="font-semibold">@candidate.DisplayName</span>
+                    <span class="text-sm text-slate-500">· team “@candidate.TeamName”</span>
+                    @if (candidate.AlreadyInTarget)
+                    {
+                        <span class="ml-2 text-sm text-slate-500">(already in @plan.Target.Name)</span>
+                    }
+                </span>
+            </label>
+
+            <div class="grid gap-3 sm:grid-cols-3">
+                <div>
+                    <label class="form-label" for="Rows_@(i)_DisplayName">Name in @plan.Target.Name</label>
+                    <input class="form-input" id="Rows_@(i)_DisplayName" name="Rows[@i].DisplayName" value="@row.DisplayName" maxlength="100" />
+                </div>
+                <div>
+                    <label class="form-label" for="Rows_@(i)_AgeGroup">Age group</label>
+                    <input class="form-input" id="Rows_@(i)_AgeGroup" name="Rows[@i].AgeGroup" value="@row.AgeGroup" maxlength="20" />
+                </div>
+                <div>
+                    <label class="form-label" for="Rows_@(i)_Level">Level</label>
+                    <input class="form-input" id="Rows_@(i)_Level" name="Rows[@i].Level" value="@row.Level" maxlength="50" />
+                </div>
+            </div>
+
+            @if (candidate.Staff.Count > 0)
+            {
+                <div>
+                    <span class="form-label">Staff carrying over</span>
+                    <div class="flex flex-wrap gap-x-6 gap-y-2">
+                        @foreach (var staff in candidate.Staff)
+                        {
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="checkbox" name="Rows[@i].StaffUserIds" value="@staff.UserId" checked="@row.StaffUserIds.Contains(staff.UserId)" class="size-4 rounded border-slate-300" />
+                                @staff.FullName <span class="text-slate-500">(@staff.Role)</span>
+                            </label>
+                        }
+                    </div>
+                </div>
+            }
+        </fieldset>
+    }
+
+    <div class="flex gap-3">
+        <button type="submit" class="btn-primary">Roll over ticked teams</button>
+        <a class="btn-secondary" asp-action="Index" asp-route-club="@slug">Cancel</a>
+    </div>
+</form>

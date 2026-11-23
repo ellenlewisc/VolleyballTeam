@@ -9,7 +9,7 @@ using VolleyballTeam.Infrastructure.Tenancy;
 
 namespace VolleyballTeam.Tests.Infrastructure;
 
-public record SeededClub(Club Club, int CoachUserId, int TeamId, string TeamName);
+public record SeededClub(Club Club, int CoachUserId, int TeamId, int SeasonId, int TeamSeasonId, string TeamName);
 
 public sealed class DatabaseFixture : IAsyncLifetime
 {
@@ -73,7 +73,8 @@ public sealed class DatabaseFixture : IAsyncLifetime
         await db.Database.EnsureDeletedAsync();
     }
 
-    public async Task<int> AddMemberAsync(Club club, int? teamId = null)
+    public async Task<int> AddMemberAsync(
+        Club club, int? teamSeasonId = null, StaffRole staffRole = StaffRole.AssistantCoach, ClubRole clubRole = ClubRole.Member)
     {
         await using var db = CreateContextFor(club);
         var email = $"member-{Guid.NewGuid():N}@{club.Slug}.test";
@@ -90,10 +91,10 @@ public sealed class DatabaseFixture : IAsyncLifetime
         };
 
         db.Users.Add(user);
-        db.ClubMemberships.Add(new ClubMembership { User = user, Role = ClubRole.Member });
-        if (teamId is int id)
+        db.ClubMemberships.Add(new ClubMembership { User = user, Role = clubRole });
+        if (teamSeasonId is int id)
         {
-            db.TeamMemberships.Add(new TeamMembership { User = user, TeamId = id, Role = TeamRole.Parent });
+            db.TeamSeasonStaff.Add(new TeamSeasonStaff { User = user, TeamSeasonId = id, Role = staffRole });
         }
 
         await db.SaveChangesAsync();
@@ -122,15 +123,21 @@ public sealed class DatabaseFixture : IAsyncLifetime
             FirstName = "Coach",
             LastName = name,
         };
-        var team = new Team { Name = $"{name} 16U", Season = "2026-27" };
+        var teamSeason = new TeamSeason
+        {
+            Team = new Team { Name = $"{name} Black" },
+            Season = new Season { Name = "2026-27", Status = SeasonStatus.Active },
+            DisplayName = $"{name} 16U",
+            AgeGroup = "16U",
+            Staff = [new TeamSeasonStaff { User = coach, Role = StaffRole.HeadCoach }],
+        };
 
         clubDb.Users.Add(coach);
-        clubDb.Teams.Add(team);
         clubDb.ClubMemberships.Add(new ClubMembership { User = coach, Role = ClubRole.Member });
-        clubDb.TeamMemberships.Add(new TeamMembership { User = coach, Team = team, Role = TeamRole.HeadCoach });
+        clubDb.TeamSeasons.Add(teamSeason);
         await clubDb.SaveChangesAsync();
 
-        return new SeededClub(club, coach.Id, team.Id, team.Name);
+        return new SeededClub(club, coach.Id, teamSeason.TeamId, teamSeason.SeasonId, teamSeason.Id, teamSeason.DisplayName);
     }
 }
 

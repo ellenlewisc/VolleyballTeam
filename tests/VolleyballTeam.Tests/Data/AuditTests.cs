@@ -27,7 +27,7 @@ public class AuditTests(DatabaseFixture fixture)
         await using (var db = fixture.CreateContextFor(fixture.Alpha.Club, editorId))
         {
             var loaded = await db.Teams.SingleAsync(t => t.Id == team.Id);
-            loaded.Level = "Gold";
+            loaded.Name = $"Renamed {Guid.NewGuid():N}";
             loaded.CreatedById = editorId;
             await db.SaveChangesAsync();
         }
@@ -68,7 +68,7 @@ public class AuditTests(DatabaseFixture fixture)
     private async Task<Team> AddTeamAsync(int? actingUserId)
     {
         await using var db = fixture.CreateContextFor(fixture.Alpha.Club, actingUserId);
-        var team = new Team { Name = $"Audit {Guid.NewGuid():N}", Season = "2026-27" };
+        var team = new Team { Name = $"Audit {Guid.NewGuid():N}" };
         db.Teams.Add(team);
         await db.SaveChangesAsync();
         return team;

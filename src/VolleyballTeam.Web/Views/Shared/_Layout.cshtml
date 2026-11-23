@@ -1,9 +1,12 @@
-﻿@using VolleyballTeam.Infrastructure.Tenancy
+﻿@using Microsoft.AspNetCore.Authorization
+@using VolleyballTeam.Web.Authorization
 @using VolleyballTeam.Web.Tenancy
-@inject TenantContext Tenant
+@inject IAuthorizationService AuthorizationService
 @{
     var club = Tenant.Club;
     var brand = club?.Name ?? "Volleyball Team Manager";
+    var isClubAdmin = club is not null && User.Identity?.IsAuthenticated == true
+        && (await AuthorizationService.AuthorizeAsync(User, Policies.ClubAdmin)).Succeeded;
 }
 <!DOCTYPE html>
 <html lang="en" style="@ClubTheme.CssVariables(club)">
@@ -15,7 +18,7 @@
 </head>
 <body class="flex min-h-screen flex-col bg-slate-50 text-slate-900 antialiased">
     <header class="bg-club text-white shadow">
-        <div class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
+        <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-3">
             @if (club is not null)
             {
                 <a class="text-lg font-bold tracking-tight" asp-controller="Club" asp-action="Index" asp-route-club="@club.Slug">@club.Name</a>
@@ -25,7 +28,12 @@
                 <a class="text-lg font-bold tracking-tight" asp-controller="Home" asp-action="Index">@brand</a>
             }
 
-            <nav class="flex items-center gap-3 text-sm">
+            <nav class="flex flex-wrap items-center gap-3 text-sm">
+                @if (isClubAdmin)
+                {
+                    <a class="rounded-md px-3 py-1.5 font-semibold hover:bg-white/15" asp-controller="Seasons" asp-action="Index" asp-route-club="@club!.Slug">Seasons</a>
+                    <a class="rounded-md px-3 py-1.5 font-semibold hover:bg-white/15" asp-controller="Teams" asp-action="Index" asp-route-club="@club!.Slug">Teams</a>
+                }
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     <span class="hidden opacity-90 sm:inline">@User.Identity.Name</span>
@@ -43,6 +51,7 @@
     </header>
 
     <main class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+        <partial name="_Flash" />
         @RenderBody()
     </main>
 
@@ -50,7 +59,9 @@
         Volleyball Team Manager
     </footer>
 
+    <partial name="_ConfirmModal" />
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/confirm.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

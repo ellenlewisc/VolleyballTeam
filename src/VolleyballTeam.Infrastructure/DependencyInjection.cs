@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using VolleyballTeam.Infrastructure.Access;
 using VolleyballTeam.Infrastructure.Auditing;
 using VolleyballTeam.Infrastructure.Config;
 using VolleyballTeam.Infrastructure.Data;
@@ -35,7 +36,9 @@ public static class DependencyInjection
                 provider.GetRequiredService<AuditInterceptor>()));
 
         services.AddScoped<UserClubService>();
+        services.AddScoped<TeamSeasonAccessService>();
         services.AddScoped<TeamService>();
+        services.AddScoped<SeasonService>();
         services.AddScoped<MemberStatusService>();
 
         services.Configure<BootstrapOptions>(configuration.GetSection(BootstrapOptions.SectionName));
