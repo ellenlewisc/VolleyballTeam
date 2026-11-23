@@ -4,7 +4,7 @@ A multi-tenant web app for running a volleyball club: team rosters, game and pra
 
 It started from a real problem: coordinating a youth club's teams, coaches and parents across group chats, spreadsheets and paper practice plans. Later, an **MCP server** will let an AI assistant build practice plans from the club's drill library.
 
-> **Status:** Phase 0 (foundations) in progress. Sign-in, multi-tenancy plumbing and tenant-isolation tests are in place; deployment comes next.
+> **Status:** Phase 0 (foundations) complete: sign-in, multi-tenancy, soft delete and auditing, tests, and push-to-deploy on Azure. Phase 1 (seasons, rosters, schedule) is next.
 
 ## Getting started
 
@@ -63,5 +63,7 @@ While editing views, run `npm run css:watch` in `src/VolleyballTeam.Web` for liv
 | [0009](docs/adr/0009-mcp-server-future-phase.md) | MCP server as a future phase | Proposed |
 | [0010](docs/adr/0010-apply-migrations-in-deploy-pipeline.md) | Apply migrations in the deploy pipeline | Accepted |
 | [0011](docs/adr/0011-soft-delete-and-deactivation.md) | Soft delete and user deactivation | Accepted |
+| [0012](docs/adr/0012-seasons-and-team-history.md) | Seasons and team history | Accepted |
+| [0013](docs/adr/0013-guardians-as-contacts.md) | Guardians as contacts, no parent logins in Phase 1 | Accepted |
 
 New decisions use the [ADR template](docs/adr/0000-template.md).

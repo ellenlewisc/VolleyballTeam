@@ -25,7 +25,7 @@ One place where a volleyball club runs its teams. Coaches manage rosters and pla
 | **Club Admin** | Sets club branding, creates teams, invites coaches |
 | **Head / Assistant Coach** | Manages roster, schedule, practice plans, announcements for their team(s) |
 | **Team Manager** | Helps with schedule, roster details and announcements |
-| **Parent / Guardian** | Sees their own player's team schedule and announcements; RSVPs (Phase 3) |
+| **Parent / Guardian** | Receives announcement emails (Phase 1); signs in to see their player's team and RSVP (Phase 3) |
 | **Player** (later) | Read-only view of their team's schedule |
 
 The full permissions matrix is in [DOMAIN.md](DOMAIN.md#roles-and-permissions).
@@ -43,13 +43,17 @@ The full permissions matrix is in [DOMAIN.md](DOMAIN.md#roles-and-permissions).
 **Done when:** a signed-in user can see `/{club}/` for their club only, isolation tests pass in CI, and the site is live on `*.azurewebsites.net`.
 
 ### Phase 1: MVP
-- Club branding: name, logo (Blob), primary and secondary colors applied to the layout
-- Teams: create and edit, season, age group, level
-- Roster: players, jersey number, positions, grad year, linked guardians
-- Roster CSV import and export (CsvHelper)
-- Schedule: practices, games, tournaments, with location and opponent; club time zone
-- Announcements: posted to a team and emailed to its parents and guardians
-- Invitations: coaches invite parents by email
+Delivered in slices, each its own pull request and migration:
+
+1. **Seasons and teams:** seasons (Upcoming, Active, Archived), teams that carry history, team seasons, staff, rollover, and history access rules ([ADR 0012](adr/0012-seasons-and-team-history.md))
+2. **Players and roster:** club player directory, roster per team season, guardian contacts, roster CSV import and export (CsvHelper)
+3. **Members, invitations and email:** member admin (roles, deactivation), staff invitations, password reset, Azure Communication Services email
+4. **Schedule:** practices, games, tournaments, with location and opponent, in the club time zone
+5. **Announcements:** posted to a team season and emailed to guardians and staff, with unsubscribe
+6. **Club branding:** name, colors, logo (Blob Storage with SAS)
+7. **Cleanup:** drop the Phase 0 team columns and table
+
+Parents and players don't log in during Phase 1; guardians are email contacts ([ADR 0013](adr/0013-guardians-as-contacts.md)).
 
 **Done when:** one real team's season (roster + schedule) is running in the app and its parents are receiving announcements.
 
@@ -62,6 +66,7 @@ The full permissions matrix is in [DOMAIN.md](DOMAIN.md#roles-and-permissions).
 **Done when:** a coach can build and print a 90-minute practice from library drills in under five minutes.
 
 ### Phase 3: Engagement
+- Parent logins (guardian contacts linked to accounts by email)
 - RSVPs and attendance per event
 - Game results (set-by-set scores)
 - Subscribable iCal feed per team, so parents can add the schedule to their phone calendar

@@ -75,9 +75,13 @@ public partial class BootstrapSeeder(
 
         if (!string.IsNullOrWhiteSpace(settings.TeamName) && !string.IsNullOrWhiteSpace(settings.TeamSeason))
         {
-            var team = new Team { Name = settings.TeamName, Season = settings.TeamSeason };
-            db.Teams.Add(team);
-            db.TeamMemberships.Add(new TeamMembership { UserId = owner.Id, Team = team, Role = TeamRole.HeadCoach });
+            db.TeamSeasons.Add(new TeamSeason
+            {
+                Team = new Team { Name = settings.TeamName },
+                Season = new Season { Name = settings.TeamSeason, Status = SeasonStatus.Active },
+                DisplayName = settings.TeamName,
+                Staff = [new TeamSeasonStaff { UserId = owner.Id, Role = StaffRole.HeadCoach }],
+            });
         }
 
         await db.SaveChangesAsync(cancellationToken);

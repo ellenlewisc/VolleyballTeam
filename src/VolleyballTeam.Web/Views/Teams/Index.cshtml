@@ -1,0 +1,42 @@
+@model TeamsPageViewModel
+@{
+    ViewData["Title"] = "Teams";
+    var slug = Tenant.Club!.Slug;
+}
+
+<div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <h1 class="mb-1 text-2xl font-bold">Teams</h1>
+        <p class="text-sm text-slate-600">A team keeps its history across seasons. Use <a class="font-medium text-club underline" asp-controller="Seasons" asp-action="Index" asp-route-club="@slug">Seasons</a> to roll teams into a new season.</p>
+    </div>
+    <a class="btn-primary" asp-action="Create" asp-route-club="@slug">New team</a>
+</div>
+
+@if (Model.Teams.Count == 0)
+{
+    <div class="card text-slate-600">No teams yet.</div>
+}
+else
+{
+    <div class="card overflow-x-auto p-0">
+        <table class="w-full text-left text-sm">
+            <thead class="border-b border-slate-200 bg-slate-50 text-slate-600">
+                <tr>
+                    <th class="px-4 py-3 font-medium">Team</th>
+                    <th class="px-4 py-3 font-medium">Latest season</th>
+                    <th class="px-4 py-3 font-medium">Seasons played</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @foreach (var team in Model.Teams)
+                {
+                    <tr>
+                        <td class="px-4 py-3 font-medium">@team.Name</td>
+                        <td class="px-4 py-3 text-slate-600">@(team.LatestDisplayName is null ? "—" : $"{team.LatestDisplayName} ({team.LatestSeasonName})")</td>
+                        <td class="px-4 py-3">@team.SeasonCount</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

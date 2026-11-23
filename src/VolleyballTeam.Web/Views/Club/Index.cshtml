@@ -3,26 +3,29 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<h1 class="mb-1 text-2xl font-bold">@Model.ClubName</h1>
-<p class="mb-6 text-slate-600">Your teams</p>
+<div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <h1 class="mb-1 text-2xl font-bold">@Model.ClubName</h1>
+        <p class="text-slate-600">Your teams</p>
+    </div>
+    @if (Model.IsAdmin)
+    {
+        <a class="btn-primary" asp-controller="Teams" asp-action="Create" asp-route-club="@Tenant.Club!.Slug">New team</a>
+    }
+</div>
 
-@if (Model.Teams.Count == 0)
+@if (Model.Current.Count == 0)
 {
-    <div class="card text-slate-600">You aren't on any teams in this club yet.</div>
+    <div class="card text-slate-600">You aren't on any current teams in this club yet.</div>
 }
 else
 {
-    <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        @foreach (var team in Model.Teams)
-        {
-            <li class="card">
-                <span class="block text-lg font-semibold">@team.Name</span>
-                <span class="block text-sm text-slate-500">@team.Season · @(team.Level ?? "—")</span>
-                @if (team.Role is not null)
-                {
-                    <span class="mt-3 inline-block rounded-full bg-club/10 px-2.5 py-0.5 text-xs font-medium text-club">@team.Role</span>
-                }
-            </li>
-        }
-    </ul>
+    <partial name="_TeamSeasonCards" model="Model.Current" />
+}
+
+@if (Model.Past.Count > 0)
+{
+    <h2 class="mb-3 mt-10 text-lg font-semibold">Past seasons</h2>
+    <p class="mb-4 text-sm text-slate-500">Read-only history.</p>
+    <partial name="_TeamSeasonCards" model="Model.Past" />
 }

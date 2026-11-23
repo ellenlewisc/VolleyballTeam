@@ -1,0 +1,98 @@
+@model TeamSeasonPageViewModel
+@{
+    var team = Model.Team;
+    var slug = Tenant.Club!.Slug;
+    ViewData["Title"] = team.DisplayName;
+    var canManageStaff = Model.Access.IsClubAdmin && Model.Access.CanEdit;
+}
+
+<div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+    <div>
+        <p class="mb-1 text-sm text-slate-500">@team.SeasonName season · team “@team.TeamName”</p>
+        <h1 class="mb-2 text-2xl font-bold">@team.DisplayName</h1>
+        <div class="flex flex-wrap gap-2">
+            <partial name="_SeasonStatusBadge" model="team.SeasonStatus" />
+            @if (Model.Access.Level == AccessLevel.ReadOnly)
+            {
+                <span class="inline-block rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">Read-only</span>
+            }
+        </div>
+    </div>
+    @if (Model.Access.CanEdit)
+    {
+        <a class="btn-secondary" asp-action="Edit" asp-route-club="@slug" asp-route-id="@team.Id">Edit</a>
+    }
+</div>
+
+<div class="grid gap-6 md:grid-cols-2">
+    <section class="card">
+        <h2 class="mb-4 text-lg font-semibold">Details</h2>
+        <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
+            <dt class="text-slate-500">Age group</dt>
+            <dd>@(team.AgeGroup ?? "—")</dd>
+            <dt class="text-slate-500">Level</dt>
+            <dd>@(team.Level ?? "—")</dd>
+            <dt class="text-slate-500">Season</dt>
+            <dd>@team.SeasonName</dd>
+            <dt class="text-slate-500">Continued from</dt>
+            <dd>@(team.RolledOverFromName ?? "—")</dd>
+        </dl>
+    </section>
+
+    <section class="card">
+        <h2 class="mb-4 text-lg font-semibold">Staff</h2>
+        @if (team.Staff.Count == 0)
+        {
+            <p class="text-sm text-slate-600">No staff assigned yet.</p>
+        }
+        else
+        {
+            <ul class="divide-y divide-slate-100">
+                @foreach (var staff in team.Staff)
+                {
+                    <li class="flex items-center justify-between gap-3 py-2 text-sm">
+                        <span>
+                            <span class="font-medium">@staff.FullName</span>
+                            <span class="block text-slate-500">@staff.Role</span>
+                        </span>
+                        @if (canManageStaff)
+                        {
+                            <form method="post" asp-action="RemoveStaff" asp-route-club="@slug" asp-route-id="@team.Id" asp-route-staffId="@staff.StaffId"
+                                  data-confirm="Remove @staff.FullName from @team.DisplayName's staff?" data-confirm-title="Remove staff member" data-confirm-button="Remove" data-confirm-danger="true">
+                                <button type="submit" class="btn-danger px-3 py-1">Remove</button>
+                            </form>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+
+        @if (canManageStaff)
+        {
+            <form method="post" asp-action="AddStaff" asp-route-club="@slug" asp-route-id="@team.Id" class="mt-4 space-y-3 border-t border-slate-100 pt-4">
+                <div asp-validation-summary="ModelOnly"></div>
+                @if (Model.StaffCandidates.Count == 0)
+                {
+                    <p class="text-sm text-slate-500">Every active club member is already on this staff.</p>
+                }
+                else
+                {
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <div>
+                            <label asp-for="AddStaff.UserId" class="form-label"></label>
+                            <select asp-for="AddStaff.UserId" class="form-input" asp-items="@(new SelectList(Model.StaffCandidates, nameof(MemberOption.UserId), nameof(MemberOption.FullName)))">
+                                <option value="">Choose…</option>
+                            </select>
+                            <span asp-validation-for="AddStaff.UserId"></span>
+                        </div>
+                        <div>
+                            <label asp-for="AddStaff.Role" class="form-label"></label>
+                            <select asp-for="AddStaff.Role" class="form-input" asp-items="Html.GetEnumSelectList<StaffRole>()"></select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Add staff</button>
+                }
+            </form>
+        }
+    </section>
+</div>

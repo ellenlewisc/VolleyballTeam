@@ -1,12 +1,16 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using VolleyballTeam.Domain.Enums;
 using VolleyballTeam.Infrastructure.Data;
 using VolleyballTeam.Infrastructure.Tenancy;
 
 namespace VolleyballTeam.Web.Authorization;
 
-public class ClubMemberRequirement : IAuthorizationRequirement;
+public class ClubMemberRequirement(params ClubRole[] roles) : IAuthorizationRequirement
+{
+    public IReadOnlyCollection<ClubRole> Roles { get; } = roles;
+}
 
 public class ClubMemberHandler(TenantContext tenant, AppDbContext db) : AuthorizationHandler<ClubMemberRequirement>
 {
@@ -17,8 +21,13 @@ public class ClubMemberHandler(TenantContext tenant, AppDbContext db) : Authoriz
             return;
         }
 
+        var roles = requirement.Roles;
+
         // Checked on every request so deactivation takes effect immediately, not at the next cookie revalidation.
-        if (await db.ClubMemberships.AnyAsync(m => m.UserId == userId && m.DeactivatedAt == null && m.User!.DeactivatedAt == null))
+        if (await db.ClubMemberships.AnyAsync(m => m.UserId == userId
+            && m.DeactivatedAt == null
+            && m.User!.DeactivatedAt == null
+            && (roles.Count == 0 || roles.Contains(m.Role))))
         {
             context.Succeed(requirement);
         }

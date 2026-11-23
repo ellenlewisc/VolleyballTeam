@@ -1,0 +1,74 @@
+@model SeasonsPageViewModel
+@{
+    ViewData["Title"] = "Seasons";
+    var slug = Tenant.Club!.Slug;
+}
+
+<div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <h1 class="mb-1 text-2xl font-bold">Seasons</h1>
+        <p class="text-sm text-slate-600">Set up next season while this one runs, roll teams into it, then start it. Archived seasons are read-only.</p>
+    </div>
+    <a class="btn-primary" asp-action="Create" asp-route-club="@slug">New season</a>
+</div>
+
+@if (Model.Seasons.Count == 0)
+{
+    <div class="card text-slate-600">No seasons yet. Create one to start adding teams.</div>
+}
+else
+{
+    <div class="card overflow-x-auto p-0">
+        <table class="w-full text-left text-sm">
+            <thead class="border-b border-slate-200 bg-slate-50 text-slate-600">
+                <tr>
+                    <th class="px-4 py-3 font-medium">Season</th>
+                    <th class="px-4 py-3 font-medium">Dates</th>
+                    <th class="px-4 py-3 font-medium">Teams</th>
+                    <th class="px-4 py-3 font-medium">Status</th>
+                    <th class="px-4 py-3"><span class="sr-only">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @foreach (var season in Model.Seasons)
+                {
+                    <tr>
+                        <td class="px-4 py-3 font-medium">@season.Name</td>
+                        <td class="px-4 py-3 text-slate-600">@(season.StartsOn?.ToString("MMM d, yyyy") ?? "—") – @(season.EndsOn?.ToString("MMM d, yyyy") ?? "—")</td>
+                        <td class="px-4 py-3">@season.TeamCount</td>
+                        <td class="px-4 py-3"><partial name="_SeasonStatusBadge" model="season.Status" /></td>
+                        <td class="px-4 py-3">
+                            <div class="flex flex-wrap justify-end gap-2">
+                                @if (season.Status != SeasonStatus.Archived)
+                                {
+                                    <a class="btn-secondary px-3 py-1" asp-action="Rollover" asp-route-club="@slug" asp-route-id="@season.Id">Roll teams in</a>
+                                }
+                                @if (season.Status == SeasonStatus.Upcoming)
+                                {
+                                    <form method="post" asp-action="Start" asp-route-club="@slug" asp-route-id="@season.Id"
+                                          data-confirm="Start @season.Name? Its teams become the current teams." data-confirm-title="Start season" data-confirm-button="Start season">
+                                        <button type="submit" class="btn-primary px-3 py-1">Start</button>
+                                    </form>
+                                }
+                                else if (season.Status == SeasonStatus.Active)
+                                {
+                                    <form method="post" asp-action="Archive" asp-route-club="@slug" asp-route-id="@season.Id"
+                                          data-confirm="Archive @season.Name? Its teams become read-only history. Only head coaches keep read access to their own past teams." data-confirm-title="Archive season" data-confirm-button="Archive" data-confirm-danger="true">
+                                        <button type="submit" class="btn-danger px-3 py-1">Archive</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-action="Reopen" asp-route-club="@slug" asp-route-id="@season.Id"
+                                          data-confirm="Reopen @season.Name for editing? Its staff regain edit access until you archive it again." data-confirm-title="Reopen season" data-confirm-button="Reopen">
+                                        <button type="submit" class="btn-secondary px-3 py-1">Reopen</button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

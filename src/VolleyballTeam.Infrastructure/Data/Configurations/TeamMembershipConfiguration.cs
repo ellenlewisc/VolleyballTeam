@@ -8,18 +8,20 @@ public class TeamMembershipConfiguration : IEntityTypeConfiguration<TeamMembersh
 {
     public void Configure(EntityTypeBuilder<TeamMembership> builder)
     {
+        builder.ToTable("TeamMemberships");
+
         builder.HasOne<Club>()
             .WithMany()
             .HasForeignKey(m => m.ClubId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(m => m.Team)
-            .WithMany(t => t.Memberships)
+        builder.HasOne<Team>()
+            .WithMany()
             .HasForeignKey(m => new { m.ClubId, m.TeamId })
             .HasPrincipalKey(t => new { t.ClubId, t.Id })
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne(m => m.User)
+        builder.HasOne<AppUser>()
             .WithMany()
             .HasForeignKey(m => m.UserId)
             .OnDelete(DeleteBehavior.Cascade);
