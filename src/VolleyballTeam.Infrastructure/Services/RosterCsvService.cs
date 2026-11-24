@@ -59,6 +59,12 @@ public class RosterCsvService(AppDbContext db, RosterService roster)
 {
     public const int MaxBytes = 256 * 1024;
 
+    // Names typed into the app could start with "=" or "+"; escaping stops Excel running them as formulas.
+    private static readonly CsvConfiguration WriteConfig = new(CultureInfo.InvariantCulture)
+    {
+        InjectionOptions = InjectionOptions.Escape,
+    };
+
     private static readonly CsvConfiguration ReadConfig = new(CultureInfo.InvariantCulture)
     {
         HeaderValidated = null,
@@ -111,7 +117,7 @@ public class RosterCsvService(AppDbContext db, RosterService roster)
 
         await using var stream = new MemoryStream();
         await using (var writer = new StreamWriter(stream, leaveOpen: true))
-        await using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+        await using (var csv = new CsvWriter(writer, WriteConfig))
         {
             await csv.WriteRecordsAsync(records, cancellationToken);
         }

@@ -143,6 +143,20 @@ public class RosterTests(DatabaseFixture fixture)
         Assert.Equal(1, preview.ValidCount);
     }
 
+    [Fact]
+    public async Task Csv_export_escapes_values_that_spreadsheets_would_run_as_formulas()
+    {
+        var teamSeasonId = await NewTeamSeasonAsync(SeasonStatus.Active);
+        await using var db = fixture.CreateContextFor(fixture.Alpha.Club);
+        var roster = Roster(db);
+        await roster.AddNewPlayerAsync(teamSeasonId, "=HYPERLINK(\"http://evil.test\")", "Smith", null, new RosterPlacement(null, null, null));
+
+        var text = Encoding.UTF8.GetString(await new RosterCsvService(db, roster).ExportAsync(teamSeasonId));
+
+        Assert.DoesNotContain("\n=HYPERLINK", text.Replace("\"", "", StringComparison.Ordinal), StringComparison.Ordinal);
+        Assert.Contains("'=HYPERLINK", text, StringComparison.Ordinal);
+    }
+
     private static RosterService Roster(AppDbContext db) => new(db, TimeProvider.System);
 
     private async Task<int> NewTeamSeasonAsync(SeasonStatus status)
