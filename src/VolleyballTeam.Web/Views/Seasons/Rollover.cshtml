@@ -91,6 +91,26 @@
                     </div>
                 </div>
             }
+
+            @if (candidate.Players.Count > 0)
+            {
+                <div>
+                    <span class="form-label">Players carrying over</span>
+                    <div class="grid gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+                        @foreach (var player in candidate.Players)
+                        {
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="checkbox" name="Rows[@i].PlayerIds" value="@player.PlayerId" checked="@row.PlayerIds.Contains(player.PlayerId)" class="size-4 rounded border-slate-300" />
+                                @player.FullName
+                                @if (player.JerseyNumber is not null)
+                                {
+                                    <span class="text-slate-500">#@player.JerseyNumber</span>
+                                }
+                            </label>
+                        }
+                    </div>
+                </div>
+            }
         </fieldset>
     }
 

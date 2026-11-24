@@ -1,0 +1,82 @@
+@model RosterAddViewModel
+@{
+    var team = Model.Team!;
+    var slug = Tenant.Club!.Slug;
+    ViewData["Title"] = "Add player";
+}
+
+<p class="mb-1 text-sm text-slate-500">
+    <a class="hover:underline" asp-action="Index" asp-route-club="@slug" asp-route-id="@team.Id">@team.DisplayName roster</a> · @team.SeasonName
+</p>
+<h1 class="mb-6 text-2xl font-bold">Add player</h1>
+
+<div class="grid gap-6 lg:grid-cols-2">
+    <section class="card">
+        <h2 class="mb-1 text-lg font-semibold">Player already in the club</h2>
+        <p class="mb-4 text-sm text-slate-500">Search first so returning players keep their history and guardians.</p>
+
+        <form method="get" asp-action="Add" asp-route-club="@slug" asp-route-id="@team.Id" class="mb-4 flex gap-2">
+            <input class="form-input" type="search" name="q" value="@Model.Search" placeholder="Search by name" aria-label="Search players by name" />
+            <button type="submit" class="btn-secondary">Search</button>
+        </form>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Search) && Model.Matches.Count == 0)
+        {
+            <p class="text-sm text-slate-600">No players match “@Model.Search”. Add them as a new player.</p>
+        }
+
+        <ul class="divide-y divide-slate-100">
+            @foreach (var match in Model.Matches)
+            {
+                <li class="py-3">
+                    <form method="post" asp-action="AddExistingPlayer" asp-route-club="@slug" asp-route-id="@team.Id" class="space-y-3">
+                        <input type="hidden" name="playerId" value="@match.PlayerId" />
+                        <div class="text-sm">
+                            <span class="font-medium">@match.FullName</span>
+                            @if (match.GradYear is not null)
+                            {
+                                <span class="text-slate-500">· class of @match.GradYear</span>
+                            }
+                            @if (match.CurrentTeams is not null)
+                            {
+                                <span class="block text-slate-500">Currently on @match.CurrentTeams</span>
+                            }
+                        </div>
+                        <partial name="_PlacementFields" model="new PlacementInput()" />
+                        <button type="submit" class="btn-primary">Add to roster</button>
+                    </form>
+                </li>
+            }
+        </ul>
+    </section>
+
+    <section class="card">
+        <h2 class="mb-4 text-lg font-semibold">New player</h2>
+        <form method="post" asp-action="AddNewPlayer" asp-route-club="@slug" asp-route-id="@team.Id" class="space-y-4">
+            <div asp-validation-summary="ModelOnly"></div>
+            <div class="grid gap-3 sm:grid-cols-2">
+                <div>
+                    <label asp-for="NewPlayer.FirstName" class="form-label"></label>
+                    <input asp-for="NewPlayer.FirstName" class="form-input" />
+                    <span asp-validation-for="NewPlayer.FirstName"></span>
+                </div>
+                <div>
+                    <label asp-for="NewPlayer.LastName" class="form-label"></label>
+                    <input asp-for="NewPlayer.LastName" class="form-input" />
+                    <span asp-validation-for="NewPlayer.LastName"></span>
+                </div>
+            </div>
+            <div class="sm:w-1/3">
+                <label asp-for="NewPlayer.GradYear" class="form-label"></label>
+                <input asp-for="NewPlayer.GradYear" class="form-input" />
+                <span asp-validation-for="NewPlayer.GradYear"></span>
+            </div>
+            <partial name="_PlacementFields" for="NewPlayer" />
+            <button type="submit" class="btn-primary">Add new player</button>
+        </form>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

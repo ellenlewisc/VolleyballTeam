@@ -1,0 +1,33 @@
+@model PlacementInput
+@{
+    var prefix = ViewData.TemplateInfo.HtmlFieldPrefix;
+    string Name(string field) => string.IsNullOrEmpty(prefix) ? field : $"{prefix}.{field}";
+    string Id(string field) => Name(field).Replace('.', '_');
+    var positions = Enum.GetValues<Position>();
+}
+<div class="grid gap-3 sm:grid-cols-3">
+    <div>
+        <label class="form-label" for="@Id("JerseyNumber")">Jersey #</label>
+        <input class="form-input" type="number" min="0" max="99" id="@Id("JerseyNumber")" name="@Name("JerseyNumber")" value="@Model.JerseyNumber" />
+    </div>
+    <div>
+        <label class="form-label" for="@Id("PrimaryPosition")">Primary position</label>
+        <select class="form-input" id="@Id("PrimaryPosition")" name="@Name("PrimaryPosition")">
+            <option value="">—</option>
+            @foreach (var position in positions)
+            {
+                <option value="@position" selected="@(Model.PrimaryPosition == position)">@position</option>
+            }
+        </select>
+    </div>
+    <div>
+        <label class="form-label" for="@Id("SecondaryPosition")">Secondary position</label>
+        <select class="form-input" id="@Id("SecondaryPosition")" name="@Name("SecondaryPosition")">
+            <option value="">—</option>
+            @foreach (var position in positions)
+            {
+                <option value="@position" selected="@(Model.SecondaryPosition == position)">@position</option>
+            }
+        </select>
+    </div>
+</div>

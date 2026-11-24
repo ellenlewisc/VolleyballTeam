@@ -39,6 +39,9 @@ public static class DependencyInjection
         services.AddScoped<TeamSeasonAccessService>();
         services.AddScoped<TeamService>();
         services.AddScoped<SeasonService>();
+        services.AddScoped<PlayerService>();
+        services.AddScoped<RosterService>();
+        services.AddScoped<RosterCsvService>();
         services.AddScoped<MemberStatusService>();
 
         services.Configure<BootstrapOptions>(configuration.GetSection(BootstrapOptions.SectionName));

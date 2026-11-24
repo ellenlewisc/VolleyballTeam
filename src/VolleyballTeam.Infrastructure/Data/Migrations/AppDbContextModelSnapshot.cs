@@ -368,6 +368,211 @@ namespace VolleyballTeam.Infrastructure.Data.Migrations
                     b.ToTable("ClubMemberships");
                 });
 
+            modelBuilder.Entity("VolleyballTeam.Domain.Entities.Guardian", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedById")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Relationship")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("UnsubscribeToken")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTime?>("UnsubscribedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedById")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("DeletedById");
+
+                    b.HasIndex("UnsubscribeToken")
+                        .IsUnique();
+
+                    b.HasIndex("UpdatedById");
+
+                    b.HasIndex("ClubId", "PlayerId", "Email")
+                        .IsUnique()
+                        .HasFilter("[DeletedAt] IS NULL");
+
+                    b.ToTable("Guardians");
+                });
+
+            modelBuilder.Entity("VolleyballTeam.Domain.Entities.Player", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedById")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("GradYear")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedById")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("DeletedById");
+
+                    b.HasIndex("UpdatedById");
+
+                    b.HasIndex("ClubId", "LastName", "FirstName");
+
+                    b.ToTable("Players");
+                });
+
+            modelBuilder.Entity("VolleyballTeam.Domain.Entities.RosterEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedById")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("JerseyNumber")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("JoinedOn")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("LeftOn")
+                        .HasColumnType("date");
+
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PrimaryPosition")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("SecondaryPosition")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<int>("TeamSeasonId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedById")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("DeletedById");
+
+                    b.HasIndex("UpdatedById");
+
+                    b.HasIndex("ClubId", "PlayerId");
+
+                    b.HasIndex("ClubId", "TeamSeasonId", "JerseyNumber")
+                        .IsUnique()
+                        .HasFilter("[LeftOn] IS NULL AND [DeletedAt] IS NULL AND [JerseyNumber] IS NOT NULL");
+
+                    b.HasIndex("ClubId", "TeamSeasonId", "PlayerId")
+                        .IsUnique()
+                        .HasFilter("[LeftOn] IS NULL AND [DeletedAt] IS NULL");
+
+                    b.ToTable("RosterEntries");
+                });
+
             modelBuilder.Entity("VolleyballTeam.Domain.Entities.Season", b =>
                 {
                     b.Property<int>("Id")
@@ -780,6 +985,105 @@ namespace VolleyballTeam.Infrastructure.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("VolleyballTeam.Domain.Entities.Guardian", b =>
+                {
+                    b.HasOne("VolleyballTeam.Domain.Entities.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("VolleyballTeam.Domain.Entities.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VolleyballTeam.Domain.Entities.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("DeletedById")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VolleyballTeam.Domain.Entities.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UpdatedById")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VolleyballTeam.Domain.Entities.Player", "Player")
+                        .WithMany("Guardians")
+                        .HasForeignKey("ClubId", "PlayerId")
+                        .HasPrincipalKey("ClubId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Player");
+                });
+
+            modelBuilder.Entity("VolleyballTeam.Domain.Entities.Player", b =>
+                {
+                    b.HasOne("VolleyballTeam.Domain.Entities.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("VolleyballTeam.Domain.Entities.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VolleyballTeam.Domain.Entities.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("DeletedById")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VolleyballTeam.Domain.Entities.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UpdatedById")
+                        .OnDelete(DeleteBehavior.NoAction);
+                });
+
+            modelBuilder.Entity("VolleyballTeam.Domain.Entities.RosterEntry", b =>
+                {
+                    b.HasOne("VolleyballTeam.Domain.Entities.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("VolleyballTeam.Domain.Entities.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VolleyballTeam.Domain.Entities.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("DeletedById")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VolleyballTeam.Domain.Entities.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UpdatedById")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VolleyballTeam.Domain.Entities.Player", "Player")
+                        .WithMany("RosterEntries")
+                        .HasForeignKey("ClubId", "PlayerId")
+                        .HasPrincipalKey("ClubId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("VolleyballTeam.Domain.Entities.TeamSeason", "TeamSeason")
+                        .WithMany("Roster")
+                        .HasForeignKey("ClubId", "TeamSeasonId")
+                        .HasPrincipalKey("ClubId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Player");
+
+                    b.Navigation("TeamSeason");
+                });
+
             modelBuilder.Entity("VolleyballTeam.Domain.Entities.Season", b =>
                 {
                     b.HasOne("VolleyballTeam.Domain.Entities.Club", null)
@@ -963,6 +1267,13 @@ namespace VolleyballTeam.Infrastructure.Data.Migrations
                     b.Navigation("Teams");
                 });
 
+            modelBuilder.Entity("VolleyballTeam.Domain.Entities.Player", b =>
+                {
+                    b.Navigation("Guardians");
+
+                    b.Navigation("RosterEntries");
+                });
+
             modelBuilder.Entity("VolleyballTeam.Domain.Entities.Season", b =>
                 {
                     b.Navigation("TeamSeasons");
@@ -975,6 +1286,8 @@ namespace VolleyballTeam.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("VolleyballTeam.Domain.Entities.TeamSeason", b =>
                 {
+                    b.Navigation("Roster");
+
                     b.Navigation("Staff");
                 });
 #pragma warning restore 612, 618

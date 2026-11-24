@@ -102,4 +102,6 @@ public class RolloverRowInput
     public string? Level { get; set; }
 
     public List<int> StaffUserIds { get; set; } = [];
+
+    public List<int> PlayerIds { get; set; } = [];
 }

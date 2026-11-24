@@ -1,0 +1,98 @@
+@model RosterPageViewModel
+@{
+    var team = Model.Team;
+    var slug = Tenant.Club!.Slug;
+    ViewData["Title"] = $"{team.DisplayName} roster";
+    var canEdit = Model.Access.CanEdit;
+    var canExport = canEdit || Model.Access.IsClubAdmin;
+}
+
+<div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <p class="mb-1 text-sm text-slate-500">
+            <a class="hover:underline" asp-controller="TeamSeasons" asp-action="Show" asp-route-club="@slug" asp-route-id="@team.Id">@team.DisplayName</a> · @team.SeasonName
+        </p>
+        <h1 class="text-2xl font-bold">Roster</h1>
+    </div>
+    <div class="flex flex-wrap gap-2">
+        @if (canEdit)
+        {
+            <a class="btn-primary" asp-action="Add" asp-route-club="@slug" asp-route-id="@team.Id">Add player</a>
+            <a class="btn-secondary" asp-action="Import" asp-route-club="@slug" asp-route-id="@team.Id">Import CSV</a>
+        }
+        @if (canExport)
+        {
+            <a class="btn-secondary" asp-action="Export" asp-route-club="@slug" asp-route-id="@team.Id">Export CSV</a>
+        }
+    </div>
+</div>
+
+<div class="mb-4 text-sm">
+    @if (Model.ShowLeft)
+    {
+        <a class="font-medium text-club hover:underline" asp-action="Index" asp-route-club="@slug" asp-route-id="@team.Id">Hide players who left</a>
+    }
+    else
+    {
+        <a class="font-medium text-club hover:underline" asp-action="Index" asp-route-club="@slug" asp-route-id="@team.Id" asp-route-past="true">Show players who left</a>
+    }
+</div>
+
+@if (Model.Rows.Count == 0)
+{
+    <div class="card text-slate-600">No players on this roster yet.</div>
+}
+else
+{
+    <div class="card overflow-x-auto p-0">
+        <table class="w-full text-left text-sm">
+            <thead class="border-b border-slate-200 bg-slate-50 text-slate-600">
+                <tr>
+                    <th class="px-4 py-3 font-medium">#</th>
+                    <th class="px-4 py-3 font-medium">Player</th>
+                    <th class="px-4 py-3 font-medium">Grad year</th>
+                    <th class="px-4 py-3 font-medium">Positions</th>
+                    <th class="px-4 py-3 font-medium">Guardians</th>
+                    @if (canEdit)
+                    {
+                        <th class="px-4 py-3"><span class="sr-only">Actions</span></th>
+                    }
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @foreach (var row in Model.Rows)
+                {
+                    var left = row.LeftOn is not null;
+                    <tr class="@(left ? "text-slate-400" : "")">
+                        <td class="px-4 py-3 font-semibold">@(row.JerseyNumber?.ToString() ?? "—")</td>
+                        <td class="px-4 py-3">
+                            <span class="font-medium">@row.LastName, @row.FirstName</span>
+                            @if (left)
+                            {
+                                <span class="block text-xs">Left @row.LeftOn!.Value.ToString("MMM d, yyyy")</span>
+                            }
+                        </td>
+                        <td class="px-4 py-3">@(row.GradYear?.ToString() ?? "—")</td>
+                        <td class="px-4 py-3">@(row.PrimaryPosition?.ToString() ?? "—")@(row.SecondaryPosition is null ? "" : $" / {row.SecondaryPosition}")</td>
+                        <td class="px-4 py-3">@row.GuardianCount</td>
+                        @if (canEdit)
+                        {
+                            <td class="px-4 py-3">
+                                <div class="flex justify-end gap-2">
+                                    <a class="btn-secondary px-3 py-1" asp-action="Entry" asp-route-club="@slug" asp-route-id="@team.Id" asp-route-entryId="@row.EntryId">Edit</a>
+                                    @if (!left)
+                                    {
+                                        <form method="post" asp-action="Leave" asp-route-club="@slug" asp-route-id="@team.Id" asp-route-entryId="@row.EntryId"
+                                              data-confirm="Remove @row.FirstName @row.LastName from the current roster? They stay in this team's history." data-confirm-title="Remove from roster" data-confirm-button="Remove" data-confirm-danger="true">
+                                            <button type="submit" class="btn-danger px-3 py-1">Remove</button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

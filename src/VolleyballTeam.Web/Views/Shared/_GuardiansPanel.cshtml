@@ -1,0 +1,73 @@
+@model GuardiansPanelViewModel
+
+<section class="card">
+    <h2 class="mb-1 text-lg font-semibold">Guardians</h2>
+    <p class="mb-4 text-sm text-slate-500">They receive team announcements by email. They don't sign in.</p>
+
+    @if (Model.Guardians.Count == 0)
+    {
+        <p class="text-sm text-slate-600">No guardians yet.</p>
+    }
+    else
+    {
+        <ul class="divide-y divide-slate-100">
+            @foreach (var item in Model.Guardians)
+            {
+                var guardian = item.Guardian;
+                <li class="flex items-center justify-between gap-3 py-2 text-sm">
+                    <span>
+                        <span class="font-medium">@guardian.FirstName @guardian.LastName</span>
+                        @if (guardian.Relationship is not null)
+                        {
+                            <span class="text-slate-500">(@guardian.Relationship)</span>
+                        }
+                        <span class="block text-slate-500">@guardian.Email</span>
+                        @if (guardian.Unsubscribed)
+                        {
+                            <span class="mt-1 inline-block rounded-full bg-slate-200 px-2 py-0.5 text-xs text-slate-700">Unsubscribed</span>
+                        }
+                    </span>
+                    @if (item.RemoveUrl is not null)
+                    {
+                        <form method="post" action="@item.RemoveUrl"
+                              data-confirm="Remove @guardian.FirstName @guardian.LastName as a guardian? They'll stop getting team emails." data-confirm-title="Remove guardian" data-confirm-button="Remove" data-confirm-danger="true">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn-danger px-3 py-1">Remove</button>
+                        </form>
+                    }
+                </li>
+            }
+        </ul>
+    }
+
+    @if (Model.AddUrl is not null)
+    {
+        <form method="post" action="@Model.AddUrl" class="mt-4 space-y-3 border-t border-slate-100 pt-4">
+            @Html.AntiForgeryToken()
+            <h3 class="text-sm font-semibold">Add a guardian</h3>
+            <div class="grid gap-3 sm:grid-cols-2">
+                <div>
+                    <label asp-for="NewGuardian.FirstName" class="form-label"></label>
+                    <input asp-for="NewGuardian.FirstName" class="form-input" />
+                    <span asp-validation-for="NewGuardian.FirstName"></span>
+                </div>
+                <div>
+                    <label asp-for="NewGuardian.LastName" class="form-label"></label>
+                    <input asp-for="NewGuardian.LastName" class="form-input" />
+                    <span asp-validation-for="NewGuardian.LastName"></span>
+                </div>
+                <div>
+                    <label asp-for="NewGuardian.Email" class="form-label"></label>
+                    <input asp-for="NewGuardian.Email" class="form-input" />
+                    <span asp-validation-for="NewGuardian.Email"></span>
+                </div>
+                <div>
+                    <label asp-for="NewGuardian.Relationship" class="form-label"></label>
+                    <input asp-for="NewGuardian.Relationship" class="form-input" />
+                    <span asp-validation-for="NewGuardian.Relationship"></span>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary">Add guardian</button>
+        </form>
+    }
+</section>

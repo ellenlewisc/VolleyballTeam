@@ -1,0 +1,56 @@
+@model RosterEntryViewModel
+@{
+    var team = Model.Team!;
+    var entry = Model.Entry!;
+    var slug = Tenant.Club!.Slug;
+    ViewData["Title"] = $"{entry.FirstName} {entry.LastName}";
+}
+
+<p class="mb-1 text-sm text-slate-500">
+    <a class="hover:underline" asp-action="Index" asp-route-club="@slug" asp-route-id="@team.Id">@team.DisplayName roster</a> · @team.SeasonName
+</p>
+<h1 class="mb-1 text-2xl font-bold">@entry.FirstName @entry.LastName</h1>
+<p class="mb-6 text-sm text-slate-500">
+    Joined @entry.JoinedOn.ToString("MMM d, yyyy")
+    @if (entry.LeftOn is not null)
+    {
+        <span>· left @entry.LeftOn.Value.ToString("MMM d, yyyy")</span>
+    }
+</p>
+
+<div class="grid gap-6 lg:grid-cols-2">
+    <section class="card">
+        <h2 class="mb-4 text-lg font-semibold">Player</h2>
+        <form method="post" asp-action="Entry" asp-route-club="@slug" asp-route-id="@team.Id" asp-route-entryId="@entry.EntryId" class="space-y-4">
+            <div asp-validation-summary="ModelOnly"></div>
+            <div class="grid gap-3 sm:grid-cols-2">
+                <div>
+                    <label asp-for="Player.FirstName" class="form-label"></label>
+                    <input asp-for="Player.FirstName" class="form-input" />
+                    <span asp-validation-for="Player.FirstName"></span>
+                </div>
+                <div>
+                    <label asp-for="Player.LastName" class="form-label"></label>
+                    <input asp-for="Player.LastName" class="form-input" />
+                    <span asp-validation-for="Player.LastName"></span>
+                </div>
+            </div>
+            <div class="sm:w-1/3">
+                <label asp-for="Player.GradYear" class="form-label"></label>
+                <input asp-for="Player.GradYear" class="form-input" />
+                <span asp-validation-for="Player.GradYear"></span>
+            </div>
+            <partial name="_PlacementFields" for="Player" />
+            <div class="flex gap-3">
+                <button type="submit" class="btn-primary">Save</button>
+                <a class="btn-secondary" asp-action="Index" asp-route-club="@slug" asp-route-id="@team.Id">Cancel</a>
+            </div>
+        </form>
+    </section>
+
+    <partial name="_GuardiansPanel" model="Model.Guardians" />
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -9,14 +9,16 @@ public record SeasonRow(int Id, string Name, DateOnly? StartsOn, DateOnly? EndsO
 
 public record RolloverStaff(int UserId, string FullName, StaffRole Role);
 
+public record RolloverPlayer(int PlayerId, string FullName, int? JerseyNumber);
+
 public record RolloverCandidate(
-    int SourceTeamSeasonId, string TeamName, string DisplayName, string? AgeGroup, string? Level, bool AlreadyInTarget, IReadOnlyList<RolloverStaff> Staff);
+    int SourceTeamSeasonId, string TeamName, string DisplayName, string? AgeGroup, string? Level, bool AlreadyInTarget, IReadOnlyList<RolloverStaff> Staff, IReadOnlyList<RolloverPlayer> Players);
 
 public record RolloverView(SeasonRow Target, IReadOnlyList<SeasonRow> Sources, int? SourceSeasonId, IReadOnlyList<RolloverCandidate> Candidates);
 
-public record RolloverTeam(int SourceTeamSeasonId, string DisplayName, string? AgeGroup, string? Level, IReadOnlyCollection<int> StaffUserIds);
+public record RolloverTeam(int SourceTeamSeasonId, string DisplayName, string? AgeGroup, string? Level, IReadOnlyCollection<int> StaffUserIds, IReadOnlyCollection<int> PlayerIds);
 
-public class SeasonService(AppDbContext db)
+public class SeasonService(AppDbContext db, RosterService roster)
 {
     public Task<List<SeasonRow>> GetSeasonsAsync(CancellationToken cancellationToken = default) =>
         db.Seasons
@@ -103,6 +105,11 @@ public class SeasonService(AppDbContext db)
                     .OrderBy(s => s.Role)
                     .Select(s => new RolloverStaff(s.UserId, s.User!.FirstName + " " + s.User.LastName, s.Role))
                     .ToList(),
+                Players = t.Roster
+                    .Where(r => r.LeftOn == null)
+                    .OrderBy(r => r.Player!.LastName)
+                    .Select(r => new RolloverPlayer(r.PlayerId, r.Player!.FirstName + " " + r.Player.LastName, r.JerseyNumber))
+                    .ToList(),
             })
             .ToListAsync(cancellationToken);
 
@@ -111,7 +118,7 @@ public class SeasonService(AppDbContext db)
             sources,
             sourceSeasonId,
             candidates
-                .Select(c => new RolloverCandidate(c.Id, c.TeamName, c.DisplayName, c.AgeGroup, c.Level, teamsInTarget.Contains(c.TeamId), c.Staff))
+                .Select(c => new RolloverCandidate(c.Id, c.TeamName, c.DisplayName, c.AgeGroup, c.Level, teamsInTarget.Contains(c.TeamId), c.Staff, c.Players))
                 .ToList());
     }
 
@@ -128,6 +135,7 @@ public class SeasonService(AppDbContext db)
         var sourceIds = teams.Select(t => t.SourceTeamSeasonId).ToList();
         var sources = await db.TeamSeasons
             .Include(t => t.Staff)
+            .Include(t => t.Roster.Where(r => r.LeftOn == null))
             .Where(t => sourceIds.Contains(t.Id))
             .ToDictionaryAsync(t => t.Id, cancellationToken);
 
@@ -164,6 +172,15 @@ public class SeasonService(AppDbContext db)
                 Staff = source.Staff
                     .Where(s => request.StaffUserIds.Contains(s.UserId))
                     .Select(s => new TeamSeasonStaff { UserId = s.UserId, Role = s.Role })
+                    .ToList(),
+                Roster = source.Roster
+                    .Where(r => request.PlayerIds.Contains(r.PlayerId))
+                    .Select(r =>
+                    {
+                        var entry = roster.NewEntry(0, new RosterPlacement(r.JerseyNumber, r.PrimaryPosition, r.SecondaryPosition));
+                        entry.PlayerId = r.PlayerId;
+                        return entry;
+                    })
                     .ToList(),
             });
         }

@@ -1,0 +1,64 @@
+@model PlayerPageViewModel
+@{
+    var player = Model.Player!;
+    var slug = Tenant.Club!.Slug;
+    ViewData["Title"] = $"{player.FirstName} {player.LastName}";
+}
+
+<p class="mb-1 text-sm text-slate-500"><a class="hover:underline" asp-action="Index" asp-route-club="@slug">Players</a></p>
+<h1 class="mb-6 text-2xl font-bold">@player.FirstName @player.LastName</h1>
+
+<div class="grid gap-6 lg:grid-cols-2">
+    <section class="card">
+        <h2 class="mb-4 text-lg font-semibold">Player</h2>
+        <form method="post" asp-action="Show" asp-route-club="@slug" asp-route-playerId="@player.Id" class="space-y-4">
+            <div asp-validation-summary="ModelOnly"></div>
+            <div class="grid gap-3 sm:grid-cols-2">
+                <div>
+                    <label asp-for="Edit.FirstName" class="form-label"></label>
+                    <input asp-for="Edit.FirstName" class="form-input" />
+                    <span asp-validation-for="Edit.FirstName"></span>
+                </div>
+                <div>
+                    <label asp-for="Edit.LastName" class="form-label"></label>
+                    <input asp-for="Edit.LastName" class="form-input" />
+                    <span asp-validation-for="Edit.LastName"></span>
+                </div>
+            </div>
+            <div class="sm:w-1/3">
+                <label asp-for="Edit.GradYear" class="form-label"></label>
+                <input asp-for="Edit.GradYear" class="form-input" />
+                <span asp-validation-for="Edit.GradYear"></span>
+            </div>
+            <button type="submit" class="btn-primary">Save</button>
+        </form>
+    </section>
+
+    <partial name="_GuardiansPanel" model="Model.Guardians" />
+</div>
+
+<section class="card mt-6">
+    <h2 class="mb-4 text-lg font-semibold">Team history</h2>
+    @if (player.History.Count == 0)
+    {
+        <p class="text-sm text-slate-600">Not on any roster yet.</p>
+    }
+    else
+    {
+        <ul class="divide-y divide-slate-100 text-sm">
+            @foreach (var item in player.History)
+            {
+                <li class="flex flex-wrap justify-between gap-2 py-2">
+                    <a class="font-medium text-club hover:underline" asp-controller="TeamSeasons" asp-action="Show" asp-route-club="@slug" asp-route-id="@item.TeamSeasonId">@item.TeamSeasonName (@item.SeasonName)</a>
+                    <span class="text-slate-500">
+                        @(item.JerseyNumber is null ? "" : $"#{item.JerseyNumber} · ")@item.JoinedOn.ToString("MMM yyyy") – @(item.LeftOn?.ToString("MMM yyyy") ?? "now")
+                    </span>
+                </li>
+            }
+        </ul>
+    }
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
