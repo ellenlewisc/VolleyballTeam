@@ -1,0 +1,93 @@
+@model RosterImportViewModel
+@{
+    var team = Model.Team!;
+    var slug = Tenant.Club!.Slug;
+    ViewData["Title"] = "Import roster";
+}
+
+<p class="mb-1 text-sm text-slate-500">
+    <a class="hover:underline" asp-action="Index" asp-route-club="@slug" asp-route-id="@team.Id">@team.DisplayName roster</a> · @team.SeasonName
+</p>
+<h1 class="mb-6 text-2xl font-bold">Import roster</h1>
+
+@if (Model.Preview is null)
+{
+    <div class="card max-w-2xl">
+        <p class="mb-2 text-sm text-slate-600">Upload a CSV with these columns (only first and last name are required):</p>
+        <p class="mb-4 rounded-md bg-slate-50 p-3 font-mono text-xs text-slate-700">
+            FirstName, LastName, GradYear, JerseyNumber, PrimaryPosition, SecondaryPosition,
+            Guardian1FirstName, Guardian1LastName, Guardian1Email, Guardian1Relationship,
+            Guardian2FirstName, Guardian2LastName, Guardian2Email, Guardian2Relationship
+        </p>
+        <p class="mb-4 text-sm text-slate-600">
+            The easiest start is <a class="font-medium text-club underline" asp-action="Export" asp-route-club="@slug" asp-route-id="@team.Id">exporting this roster</a>, editing it in Excel or Google Sheets, and uploading it again.
+            Players already in the club are matched by name and grad year. You'll see a preview before anything is saved.
+        </p>
+
+        <form method="post" asp-action="Import" asp-route-club="@slug" asp-route-id="@team.Id" enctype="multipart/form-data" class="space-y-4">
+            <div asp-validation-summary="ModelOnly"></div>
+            <input type="file" name="file" accept=".csv,text/csv" class="block text-sm" aria-label="Roster CSV file" />
+            <div class="flex gap-3">
+                <button type="submit" class="btn-primary">Preview import</button>
+                <a class="btn-secondary" asp-action="Index" asp-route-club="@slug" asp-route-id="@team.Id">Cancel</a>
+            </div>
+        </form>
+    </div>
+}
+else
+{
+    var preview = Model.Preview;
+    <p class="mb-4 text-sm text-slate-600">
+        @preview.ValidCount of @preview.Rows.Count rows will be imported. Rows with problems are skipped; fix them in the file and import again.
+    </p>
+
+    <div class="card mb-6 overflow-x-auto p-0">
+        <table class="w-full text-left text-sm">
+            <thead class="border-b border-slate-200 bg-slate-50 text-slate-600">
+                <tr>
+                    <th class="px-4 py-3 font-medium">Line</th>
+                    <th class="px-4 py-3 font-medium">Player</th>
+                    <th class="px-4 py-3 font-medium">#</th>
+                    <th class="px-4 py-3 font-medium">Guardians</th>
+                    <th class="px-4 py-3 font-medium">Result</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @foreach (var row in preview.Rows)
+                {
+                    var (label, classes) = row.Action switch
+                    {
+                        ImportAction.NewPlayer => ("New player", "bg-green-100 text-green-800"),
+                        ImportAction.ExistingPlayer => ("Existing club player", "bg-sky-100 text-sky-800"),
+                        ImportAction.UpdateOnRoster => ("Update roster entry", "bg-amber-100 text-amber-800"),
+                        _ => ("Skipped", "bg-red-100 text-red-800"),
+                    };
+                    <tr>
+                        <td class="px-4 py-3 text-slate-500">@row.Line</td>
+                        <td class="px-4 py-3">@row.FirstName @row.LastName @(row.GradYear is null ? "" : $"({row.GradYear})")</td>
+                        <td class="px-4 py-3">@(row.JerseyNumber?.ToString() ?? "—")</td>
+                        <td class="px-4 py-3">@string.Join(", ", row.Guardians.Select(g => g.Email))</td>
+                        <td class="px-4 py-3">
+                            <span class="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium @classes">@label</span>
+                            @foreach (var error in row.Errors)
+                            {
+                                <span class="mt-1 block text-xs text-red-700">@error</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="flex gap-3">
+        @if (preview.ValidCount > 0)
+        {
+            <form method="post" asp-action="ConfirmImport" asp-route-club="@slug" asp-route-id="@team.Id">
+                <input type="hidden" name="csvText" value="@Model.CsvText" />
+                <button type="submit" class="btn-primary">Import @preview.ValidCount rows</button>
+            </form>
+        }
+        <a class="btn-secondary" asp-action="Import" asp-route-club="@slug" asp-route-id="@team.Id">Choose another file</a>
+    </div>
+}

@@ -72,6 +72,7 @@ public class SeasonsController(TenantContext tenant, SeasonService seasons) : Cl
                 AgeGroup = c.AgeGroup,
                 Level = c.Level,
                 StaffUserIds = c.Staff.Select(s => s.UserId).ToList(),
+                PlayerIds = c.Players.Select(p => p.PlayerId).ToList(),
             }).ToList(),
         });
     }
@@ -81,7 +82,7 @@ public class SeasonsController(TenantContext tenant, SeasonService seasons) : Cl
     {
         var chosen = model.Rows
             .Where(r => r.Include)
-            .Select(r => new RolloverTeam(r.SourceTeamSeasonId, r.DisplayName ?? "", r.AgeGroup, r.Level, r.StaffUserIds))
+            .Select(r => new RolloverTeam(r.SourceTeamSeasonId, r.DisplayName ?? "", r.AgeGroup, r.Level, r.StaffUserIds, r.PlayerIds))
             .ToList();
 
         if (chosen.Count == 0)

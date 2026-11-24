@@ -1,0 +1,31 @@
+@{
+    ViewData["Title"] = "Players";
+    var slug = Tenant.Club!.Slug;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/datatables/css/dataTables.dataTables.min.css" />
+}
+
+<h1 class="mb-1 text-2xl font-bold">Players</h1>
+<p class="mb-6 text-sm text-slate-600">Everyone who has played for the club. Players are added from a team's roster.</p>
+
+<div class="card">
+    <div id="players-antiforgery">@Html.AntiForgeryToken()</div>
+    <table id="players-table" class="w-full text-sm"
+           data-source="@Url.Action("Data", "Players", new { club = slug })">
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th>Grad year</th>
+                <th>Current teams</th>
+                <th>Guardians</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section Scripts {
+    <script src="~/lib/datatables/js/dataTables.min.js"></script>
+    <script src="~/js/players.js" asp-append-version="true"></script>
+}

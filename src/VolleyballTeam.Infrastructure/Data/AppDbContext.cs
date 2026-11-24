@@ -17,6 +17,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, TenantContext 
     public DbSet<Season> Seasons => Set<Season>();
     public DbSet<TeamSeason> TeamSeasons => Set<TeamSeason>();
     public DbSet<TeamSeasonStaff> TeamSeasonStaff => Set<TeamSeasonStaff>();
+    public DbSet<Player> Players => Set<Player>();
+    public DbSet<Guardian> Guardians => Set<Guardian>();
+    public DbSet<RosterEntry> RosterEntries => Set<RosterEntry>();
 
     public int? CurrentClubId => tenant.ClubId;
 
@@ -36,6 +39,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, TenantContext 
         builder.ApplyConfiguration(new SeasonConfiguration());
         builder.ApplyConfiguration(new TeamSeasonConfiguration());
         builder.ApplyConfiguration(new TeamSeasonStaffConfiguration());
+        builder.ApplyConfiguration(new PlayerConfiguration());
+        builder.ApplyConfiguration(new GuardianConfiguration());
+        builder.ApplyConfiguration(new RosterEntryConfiguration());
         builder.ApplyConfiguration(new AppUserConfiguration());
 
         // Every entity must be listed here; QueryFilterCoverageTests fails the build if one is missed.
@@ -46,6 +52,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, TenantContext 
         ApplyTenantFilters<Season>(builder);
         ApplyTenantFilters<TeamSeason>(builder);
         ApplyTenantFilters<TeamSeasonStaff>(builder);
+        ApplyTenantFilters<Player>(builder);
+        ApplyTenantFilters<Guardian>(builder);
+        ApplyTenantFilters<RosterEntry>(builder);
     }
 
     private static void ConfigureBaseModel<TEntity>(ModelBuilder builder)

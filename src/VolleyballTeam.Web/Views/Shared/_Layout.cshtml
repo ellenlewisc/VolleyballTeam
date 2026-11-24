@@ -14,6 +14,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] · @brand</title>
+    @await RenderSectionAsync("Styles", required: false)
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body class="flex min-h-screen flex-col bg-slate-50 text-slate-900 antialiased">
@@ -33,6 +34,7 @@
                 {
                     <a class="rounded-md px-3 py-1.5 font-semibold hover:bg-white/15" asp-controller="Seasons" asp-action="Index" asp-route-club="@club!.Slug">Seasons</a>
                     <a class="rounded-md px-3 py-1.5 font-semibold hover:bg-white/15" asp-controller="Teams" asp-action="Index" asp-route-club="@club!.Slug">Teams</a>
+                    <a class="rounded-md px-3 py-1.5 font-semibold hover:bg-white/15" asp-controller="Players" asp-action="Index" asp-route-club="@club!.Slug">Players</a>
                 }
                 @if (User.Identity?.IsAuthenticated == true)
                 {

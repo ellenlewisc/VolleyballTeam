@@ -77,9 +77,9 @@ erDiagram
 | `Team` | `TenantModel` | Name |
 | `TeamSeason` | `TenantModel` | TeamId, SeasonId, DisplayName, AgeGroup, Level, RolledOverFromId? |
 | `TeamSeasonStaff` | `TenantModel` | TeamSeasonId, UserId, `StaffRole` |
-| `Player` *(slice 2)* | `TenantModel` | FirstName, LastName, GradYear? |
-| `Guardian` *(slice 2)* | `TenantModel` | PlayerId, FirstName, LastName, Email, Relationship, UnsubscribedAt?, UnsubscribeToken |
-| `RosterEntry` *(slice 2)* | `TenantModel` | TeamSeasonId, PlayerId, JerseyNumber, PrimaryPosition, SecondaryPosition?, JoinedOn, LeftOn? |
+| `Player` | `TenantModel` | FirstName, LastName, GradYear? |
+| `Guardian` | `TenantModel` | PlayerId, FirstName, LastName, Email, Relationship, UnsubscribedAt?, UnsubscribeToken |
+| `RosterEntry` | `TenantModel` | TeamSeasonId, PlayerId, JerseyNumber, PrimaryPosition, SecondaryPosition?, JoinedOn, LeftOn? |
 | `TeamEvent` *(slice 4)* | `TenantModel` | TeamSeasonId, `EventType`, StartUtc, EndUtc, Location, Opponent?, Notes? |
 | `Announcement` *(slice 5)* | `TenantModel` | TeamSeasonId, Title, Body, PublishedAt, EmailedAt?, RecipientCount |
 | `Invitation` *(slice 3)* | `TenantModel` | Email, TokenHash, ExpiresAt, AcceptedAt?, `ClubRole`, TeamSeasonId?, `StaffRole`? |
