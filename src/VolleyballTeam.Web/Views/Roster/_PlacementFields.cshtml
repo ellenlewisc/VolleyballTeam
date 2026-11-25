@@ -16,7 +16,7 @@
             <option value="">—</option>
             @foreach (var position in positions)
             {
-                <option value="@position" selected="@(Model.PrimaryPosition == position)">@position</option>
+                <option value="@position" selected="@(Model.PrimaryPosition == position)">@PositionNames.Title(position)</option>
             }
         </select>
     </div>
@@ -26,7 +26,7 @@
             <option value="">—</option>
             @foreach (var position in positions)
             {
-                <option value="@position" selected="@(Model.SecondaryPosition == position)">@position</option>
+                <option value="@position" selected="@(Model.SecondaryPosition == position)">@PositionNames.Title(position)</option>
             }
         </select>
     </div>

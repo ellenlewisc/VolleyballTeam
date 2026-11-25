@@ -73,7 +73,7 @@ else
                             }
                         </td>
                         <td class="px-4 py-3">@(row.GradYear?.ToString() ?? "—")</td>
-                        <td class="px-4 py-3">@(row.PrimaryPosition?.ToString() ?? "—")@(row.SecondaryPosition is null ? "" : $" / {row.SecondaryPosition}")</td>
+                        <td class="px-4 py-3">@(row.PrimaryPosition is { } primary ? PositionNames.Title(primary) : "—")@(row.SecondaryPosition is { } secondary ? $" / {PositionNames.Title(secondary)}" : "")</td>
                         <td class="px-4 py-3">@row.GuardianCount</td>
                         @if (canEdit)
                         {

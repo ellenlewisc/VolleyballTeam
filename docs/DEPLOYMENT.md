@@ -82,6 +82,28 @@ The first start creates your club and owner account from the bootstrap settings.
 
 Once you can sign in, delete `Bootstrap__AdminPassword` (and the other `Bootstrap__*` settings if you like) from **App settings** and save. Bootstrap never runs again once a club exists, but the password shouldn't sit in config.
 
+## 9. Email (Azure Communication Services)
+
+Invitations, password resets and announcements are sent through Azure Communication Services (ACS), using its free Azure-managed sender domain. Until this is set up, the app saves invitations but can't email them.
+
+1. Portal → **Email Communication Services** → **Create**: resource group `rg-volleyball`, any name, **Data location** of your choice (e.g. Canada).
+2. Open it → **Provision domains** → **Add domain** → **Azure managed domain**. It creates a domain like `xxxxxxxx.azurecomm.net` with a `DoNotReply` sender.
+3. Portal → **Communication Services** → **Create**: same resource group and the same data location.
+4. Open it → **Email → Domains** → **Connect domain**: choose the email service and the managed domain from step 2.
+5. Open it → **Settings → Keys** → copy the **Connection string**.
+6. Web app → **Environment variables → App settings**, add:
+
+   | Name | Value |
+   |---|---|
+   | `Email__ConnectionString` | the connection string from step 5 |
+   | `Email__SenderAddress` | `DoNotReply@xxxxxxxx.azurecomm.net` (the managed domain from step 2) |
+
+7. **Apply** and save. Invite yourself at a second address to check delivery; check spam the first time.
+
+Each email costs a fraction of a cent. The managed domain has low sending limits, which suit one club; a custom domain (e.g. `noreply@yourclub.ca`) can replace it later by adding DNS records.
+
+Locally, leave `Email` empty: `appsettings.Development.json` sets `Email:LogBodyWhenNotConfigured`, so emails (including invitation and reset links) are written to the console instead.
+
 ## Expected behaviour on the free tier
 
 - The first request after a quiet period can take 30–60 seconds while the app and database wake up. The database connection retries automatically.

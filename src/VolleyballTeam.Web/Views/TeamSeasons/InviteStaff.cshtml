@@ -1,0 +1,57 @@
+@model StaffInviteViewModel
+@{
+    var team = Model.Team!;
+    var slug = Tenant.Club!.Slug;
+    ViewData["Title"] = "Invite staff";
+}
+
+<div class="card mx-auto max-w-lg">
+    <p class="mb-1 text-sm text-slate-500">
+        <a class="hover:underline" asp-action="Show" asp-route-club="@slug" asp-route-id="@team.Id">@team.DisplayName</a> · @team.SeasonName
+    </p>
+    <h1 class="mb-1 text-2xl font-bold">Invite staff</h1>
+    <p class="mb-6 text-sm text-slate-500">If they're already in the club they're added straight away; otherwise they get an email to set up their account.</p>
+
+    <form method="post" asp-action="InviteStaff" asp-route-club="@slug" asp-route-id="@team.Id" class="space-y-4">
+        <div asp-validation-summary="ModelOnly"></div>
+
+        <div>
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-input" />
+            <span asp-validation-for="Email"></span>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2">
+            <div>
+                <label asp-for="FirstName" class="form-label"></label>
+                <input asp-for="FirstName" class="form-input" />
+                <span asp-validation-for="FirstName"></span>
+            </div>
+            <div>
+                <label asp-for="LastName" class="form-label"></label>
+                <input asp-for="LastName" class="form-input" />
+                <span asp-validation-for="LastName"></span>
+            </div>
+        </div>
+
+        <div>
+            <label asp-for="Role" class="form-label"></label>
+            <select asp-for="Role" class="form-input">
+                @foreach (var role in Model.AllowedRoles)
+                {
+                    <option value="@role" selected="@(Model.Role == role)">@StaffRoleNames.Title(role)</option>
+                }
+            </select>
+            <span asp-validation-for="Role"></span>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="submit" class="btn-primary">Send invitation</button>
+            <a class="btn-secondary" asp-action="Show" asp-route-club="@slug" asp-route-id="@team.Id">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

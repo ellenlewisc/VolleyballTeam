@@ -5,6 +5,8 @@ using VolleyballTeam.Infrastructure.Services;
 
 namespace VolleyballTeam.Web.ViewModels;
 
+public record PlayersPageViewModel(IReadOnlyList<TeamOption> Teams, int? SelectedTeamSeasonId, bool IsAdmin);
+
 public record RosterPageViewModel(TeamSeasonDetails Team, TeamSeasonAccess Access, IReadOnlyList<RosterRow> Rows, bool ShowLeft);
 
 public class PlacementInput

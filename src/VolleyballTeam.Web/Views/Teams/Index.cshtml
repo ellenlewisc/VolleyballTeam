@@ -31,8 +31,26 @@ else
                 @foreach (var team in Model.Teams)
                 {
                     <tr>
-                        <td class="px-4 py-3 font-medium">@team.Name</td>
-                        <td class="px-4 py-3 text-slate-600">@(team.LatestDisplayName is null ? "—" : $"{team.LatestDisplayName} ({team.LatestSeasonName})")</td>
+                        <td class="px-4 py-3 font-medium">
+                            @if (team.LatestTeamSeasonId is int latestId)
+                            {
+                                <a class="text-club hover:underline" asp-controller="TeamSeasons" asp-action="Show" asp-route-club="@slug" asp-route-id="@latestId">@team.Name</a>
+                            }
+                            else
+                            {
+                                @team.Name
+                            }
+                        </td>
+                        <td class="px-4 py-3 text-slate-600">
+                            @if (team.LatestTeamSeasonId is int seasonTeamId)
+                            {
+                                <a class="hover:underline" asp-controller="TeamSeasons" asp-action="Show" asp-route-club="@slug" asp-route-id="@seasonTeamId">@team.LatestDisplayName (@team.LatestSeasonName)</a>
+                            }
+                            else
+                            {
+                                <span>—</span>
+                            }
+                        </td>
                         <td class="px-4 py-3">@team.SeasonCount</td>
                     </tr>
                 }

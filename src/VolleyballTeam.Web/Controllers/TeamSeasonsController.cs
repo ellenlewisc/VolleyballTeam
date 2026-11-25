@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using VolleyballTeam.Infrastructure.Access;
 using VolleyballTeam.Infrastructure.Services;
 using VolleyballTeam.Infrastructure.Tenancy;
+using VolleyballTeam.Domain.Enums;
 using VolleyballTeam.Web.Authorization;
+using VolleyballTeam.Web.Email;
 using VolleyballTeam.Web.ViewModels;
 
 namespace VolleyballTeam.Web.Controllers;
@@ -14,8 +16,79 @@ public class TeamSeasonsController(
     TenantContext tenant,
     TeamService teams,
     TeamSeasonAccessService access,
+    InvitationService invitations,
+    MemberService members,
+    AppEmails emails,
     IAuthorizationService authorization) : ClubScopedController(tenant)
 {
+    [HttpGet("invite")]
+    public async Task<IActionResult> InviteStaff(int id, CancellationToken cancellationToken)
+    {
+        var roles = await InvitableRolesAsync(id, cancellationToken);
+        if (roles.Count == 0)
+        {
+            return Forbid();
+        }
+
+        var team = await teams.GetTeamSeasonAsync(id, cancellationToken);
+        return team is null ? NotFound() : View(new StaffInviteViewModel { Team = team, AllowedRoles = roles, Role = roles[^1] });
+    }
+
+    [HttpPost("invite")]
+    public async Task<IActionResult> InviteStaff(int id, StaffInviteViewModel model, CancellationToken cancellationToken)
+    {
+        var roles = await InvitableRolesAsync(id, cancellationToken);
+        if (roles.Count == 0)
+        {
+            return Forbid();
+        }
+
+        if (!roles.Contains(model.Role))
+        {
+            ModelState.AddModelError(nameof(model.Role), "You can't invite someone with that role.");
+        }
+
+        if (ModelState.IsValid)
+        {
+            try
+            {
+                var result = await invitations.CreateAsync(
+                    new InviteRequest(model.Email, model.FirstName, model.LastName, ClubRole.Member, id, model.Role), cancellationToken);
+
+                if (result.Outcome == InviteOutcome.AddedExistingMember)
+                {
+                    Flash($"{result.Email} is already in the club, so they were added to the staff straight away.");
+                }
+                else
+                {
+                    var acceptUrl = Url.Action(nameof(JoinController.Index), "Join", new { club = ClubSlug, token = result.Token }, Request.Scheme)!;
+                    var inviter = await members.GetDisplayNameAsync(User.GetUserId(), cancellationToken);
+                    var sent = await emails.SendInvitationAsync(
+                        CurrentClub, result.Email, inviter, ClubRole.Member, result.TeamName, model.Role, acceptUrl, cancellationToken);
+
+                    if (sent)
+                    {
+                        Flash($"Invitation sent to {result.Email}.");
+                    }
+                    else
+                    {
+                        FlashUnsentInvitation(result.Email, acceptUrl);
+                    }
+                }
+
+                return RedirectToAction(nameof(Show), new { club = ClubSlug, id });
+            }
+            catch (BusinessRuleException ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+            }
+        }
+
+        model.Team = await teams.GetTeamSeasonAsync(id, cancellationToken);
+        model.AllowedRoles = roles;
+        return model.Team is null ? NotFound() : View(model);
+    }
+
     [HttpGet("")]
     public async Task<IActionResult> Show(int id, CancellationToken cancellationToken)
     {
@@ -140,6 +213,13 @@ public class TeamSeasonsController(
 
         return View(nameof(Show), new TeamSeasonPageViewModel(team, userAccess, candidates, addStaff));
     }
+
+    // Only club admins add people; coaches manage their roster but not who coaches.
+    private async Task<IReadOnlyList<StaffRole>> InvitableRolesAsync(int id, CancellationToken cancellationToken) =>
+        InvitableRoles(await access.GetAsync(User.GetUserId(), id, cancellationToken));
+
+    internal static IReadOnlyList<StaffRole> InvitableRoles(TeamSeasonAccess userAccess) =>
+        userAccess is { CanEdit: true, IsClubAdmin: true } ? [StaffRole.HeadCoach, StaffRole.AssistantCoach, StaffRole.TeamManager] : [];
 
     private async Task<bool> IsAllowedAsync(int id, TeamSeasonRequirement requirement) =>
         (await authorization.AuthorizeAsync(User, new TeamSeasonResource(id), requirement)).Succeeded;

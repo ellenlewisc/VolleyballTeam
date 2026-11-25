@@ -1,0 +1,89 @@
+@model JoinPageViewModel
+@{
+    ViewData["Title"] = $"Join {Model.ClubName}";
+    var slug = Tenant.Club!.Slug;
+    var invitation = Model.Invitation;
+    var joinUrl = Url.Action("Index", "Join", new { club = slug, token = Model.Token });
+}
+
+<div class="card mx-auto max-w-md">
+    <h1 class="mb-4 text-2xl font-bold">Join @Model.ClubName</h1>
+
+    @if (invitation is null || invitation.IsAccepted || invitation.IsExpired)
+    {
+        <p class="text-slate-600">
+            @(invitation?.IsAccepted == true
+                ? "This invitation has already been used. Sign in to continue."
+                : "This invitation link has expired or isn't valid. Ask the person who invited you to send a new one.")
+        </p>
+        <a class="btn-primary mt-6" asp-controller="Account" asp-action="Login">Sign in</a>
+    }
+    else
+    {
+        <p class="mb-6 text-sm text-slate-600">
+            You've been invited as
+            <strong>@(invitation.TeamName is null ? $"a club {invitation.ClubRole.ToString().ToLowerInvariant()}" : $"{StaffRoleNames.Describe(invitation.StaffRole)} for {invitation.TeamName} ({invitation.SeasonName})")</strong>
+            using <strong>@invitation.Email</strong>.
+        </p>
+
+        @if (Model.SignedInEmail is not null)
+        {
+            if (string.Equals(Model.SignedInEmail, invitation.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                <form method="post" asp-action="Accept" asp-route-club="@slug" asp-route-token="@Model.Token">
+                    <button type="submit" class="btn-primary w-full">Accept invitation</button>
+                </form>
+            }
+            else
+            {
+                <p class="text-sm text-slate-600">This invitation is for @invitation.Email, but you're signed in as @Model.SignedInEmail. Sign out to accept it with the right account.</p>
+                <form method="post" asp-controller="Account" asp-action="Logout" asp-route-returnUrl="@joinUrl" class="mt-4">
+                    <button type="submit" class="btn-primary">Sign out and continue</button>
+                </form>
+            }
+        }
+        else if (invitation.AccountExists)
+        {
+            <p class="mb-4 text-sm text-slate-600">You already have an account. Sign in to accept.</p>
+            <a class="btn-primary w-full" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@joinUrl">Sign in to accept</a>
+        }
+        else
+        {
+            <form method="post" asp-action="Register" asp-route-club="@slug" asp-route-token="@Model.Token" class="space-y-4">
+                <div asp-validation-summary="ModelOnly"></div>
+
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <div>
+                        <label asp-for="Register.FirstName" class="form-label"></label>
+                        <input asp-for="Register.FirstName" class="form-input" autocomplete="given-name" />
+                        <span asp-validation-for="Register.FirstName"></span>
+                    </div>
+                    <div>
+                        <label asp-for="Register.LastName" class="form-label"></label>
+                        <input asp-for="Register.LastName" class="form-input" autocomplete="family-name" />
+                        <span asp-validation-for="Register.LastName"></span>
+                    </div>
+                </div>
+
+                <div>
+                    <label asp-for="Register.Password" class="form-label"></label>
+                    <input asp-for="Register.Password" class="form-input" autocomplete="new-password" />
+                    <span asp-validation-for="Register.Password"></span>
+                    <span class="mt-1 block text-xs text-slate-500">At least 10 characters, with upper and lower case, a number and a symbol.</span>
+                </div>
+
+                <div>
+                    <label asp-for="Register.ConfirmPassword" class="form-label"></label>
+                    <input asp-for="Register.ConfirmPassword" class="form-input" autocomplete="new-password" />
+                    <span asp-validation-for="Register.ConfirmPassword"></span>
+                </div>
+
+                <button type="submit" class="btn-primary w-full">Create account and join</button>
+            </form>
+        }
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

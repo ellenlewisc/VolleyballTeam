@@ -34,23 +34,42 @@ public partial class RosterEndpointTests(DatabaseFixture fixture)
     }
 
     [Fact]
-    public async Task Player_directory_is_for_club_admins_only()
+    public async Task Coach_sees_players_for_their_own_team_only()
     {
+        var otherTeam = await NewTeamSeasonAsync();
         using var coach = fixture.Web.CreateClientFor(fixture.Alpha.CoachUserId);
 
-        Assert.Equal(HttpStatusCode.Redirect, (await coach.GetAsync("/alpha/admin/players")).StatusCode);
+        var page = await coach.GetAsync("/alpha/players");
+        var html = await page.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, page.StatusCode);
+        Assert.DoesNotContain("All teams", html, StringComparison.Ordinal);
+        Assert.Contains($"value=\"{fixture.Alpha.TeamSeasonId}\" selected=\"selected\"", html, StringComparison.Ordinal);
+        Assert.Equal(HttpStatusCode.OK, (await PostDataAsync(coach, html, fixture.Alpha.TeamSeasonId)).StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, (await PostDataAsync(coach, html, otherTeam)).StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, (await coach.GetAsync($"/alpha/players/{otherTeam}")).StatusCode);
     }
 
     [Fact]
-    public async Task Player_directory_data_is_served_over_post_with_named_sorting()
+    public async Task Admin_sees_all_players_with_named_sorting_over_post()
     {
         var admin = await fixture.AddMemberAsync(fixture.Alpha.Club, clubRole: ClubRole.Admin);
         using var client = fixture.Web.CreateClientFor(admin);
 
-        var page = await client.GetAsync("/alpha/admin/players");
-        var token = TokenPattern().Match(await page.Content.ReadAsStringAsync()).Groups[1].Value;
+        var page = await client.GetAsync("/alpha/players");
+        var html = await page.Content.ReadAsStringAsync();
+        var response = await PostDataAsync(client, html, teamSeasonId: null);
+        var json = await response.Content.ReadAsStringAsync();
 
-        using var form = new FormUrlEncodedContent(new Dictionary<string, string>
+        Assert.Contains("All teams", html, StringComparison.Ordinal);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("\"draw\":3", json, StringComparison.Ordinal);
+        Assert.Contains("\"recordsTotal\"", json, StringComparison.Ordinal);
+    }
+
+    private static Task<HttpResponseMessage> PostDataAsync(HttpClient client, string pageHtml, int? teamSeasonId)
+    {
+        var fields = new Dictionary<string, string>
         {
             ["draw"] = "3",
             ["start"] = "0",
@@ -58,14 +77,29 @@ public partial class RosterEndpointTests(DatabaseFixture fixture)
             ["search[value]"] = "",
             ["order[0][name]"] = "gradYear",
             ["order[0][dir]"] = "desc",
-            ["__RequestVerificationToken"] = token,
-        });
-        var response = await client.PostAsync("/alpha/admin/players/data", form);
-        var json = await response.Content.ReadAsStringAsync();
+            ["__RequestVerificationToken"] = TokenPattern().Match(pageHtml).Groups[1].Value,
+        };
+        if (teamSeasonId is int id)
+        {
+            fields["teamSeasonId"] = id.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("\"draw\":3", json, StringComparison.Ordinal);
-        Assert.Contains("\"recordsTotal\"", json, StringComparison.Ordinal);
+        return client.PostAsync("/alpha/players/data", new FormUrlEncodedContent(fields));
+    }
+
+    private async Task<int> NewTeamSeasonAsync()
+    {
+        await using var db = fixture.CreateContextFor(fixture.Alpha.Club);
+        var suffix = Guid.NewGuid().ToString("N")[..10];
+        var teamSeason = new VolleyballTeam.Domain.Entities.TeamSeason
+        {
+            Team = new VolleyballTeam.Domain.Entities.Team { Name = $"Other {suffix}" },
+            SeasonId = fixture.Alpha.SeasonId,
+            DisplayName = $"Other {suffix}",
+        };
+        db.TeamSeasons.Add(teamSeason);
+        await db.SaveChangesAsync();
+        return teamSeason.Id;
     }
 
     [GeneratedRegex("name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]+)\"")]

@@ -24,6 +24,10 @@
         {
             <a class="btn-secondary" asp-action="Edit" asp-route-club="@slug" asp-route-id="@team.Id">Edit</a>
         }
+        @if (TeamSeasonsController.InvitableRoles(Model.Access).Count > 0)
+        {
+            <a class="btn-secondary" asp-action="InviteStaff" asp-route-club="@slug" asp-route-id="@team.Id">Invite staff</a>
+        }
     </div>
 </div>
 
@@ -56,7 +60,7 @@
                     <li class="flex items-center justify-between gap-3 py-2 text-sm">
                         <span>
                             <span class="font-medium">@staff.FullName</span>
-                            <span class="block text-slate-500">@staff.Role</span>
+                            <span class="block text-slate-500">@StaffRoleNames.Title(staff.Role)</span>
                         </span>
                         @if (canManageStaff)
                         {
@@ -90,7 +94,7 @@
                         </div>
                         <div>
                             <label asp-for="AddStaff.Role" class="form-label"></label>
-                            <select asp-for="AddStaff.Role" class="form-input" asp-items="Html.GetEnumSelectList<StaffRole>()"></select>
+                            <select asp-for="AddStaff.Role" class="form-input" asp-items="@(Enum.GetValues<StaffRole>().Select(r => new SelectListItem(StaffRoleNames.Title(r), r.ToString())))"></select>
                         </div>
                     </div>
                     <button type="submit" class="btn-primary">Add staff</button>

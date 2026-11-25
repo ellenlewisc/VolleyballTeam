@@ -1,0 +1,67 @@
+@model MembersPageViewModel
+@{
+    ViewData["Title"] = "Users";
+    var slug = Tenant.Club!.Slug;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/datatables/css/dataTables.dataTables.min.css" />
+}
+
+<div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <h1 class="mb-1 text-2xl font-bold">Users</h1>
+        <p class="text-sm text-slate-600">Everyone who can sign in to this club: admins, coaches and members.</p>
+    </div>
+    <a class="btn-primary" asp-action="Invite" asp-route-club="@slug">Invite</a>
+</div>
+
+@if (Model.Pending.Count > 0)
+{
+    <section class="card mb-6">
+        <h2 class="mb-4 text-lg font-semibold">Pending invitations</h2>
+        <ul class="divide-y divide-slate-100 text-sm">
+            @foreach (var invite in Model.Pending)
+            {
+                <li class="flex flex-wrap items-center justify-between gap-3 py-2">
+                    <span>
+                        <span class="font-medium">@invite.Email</span>
+                        <span class="block text-slate-500">
+                            @(invite.TeamName is null ? invite.ClubRole.ToString() : $"{StaffRoleNames.Title(invite.StaffRole)} · {invite.TeamName}") ·
+                            @(invite.IsExpired ? "expired" : $"expires {invite.ExpiresAt:MMM d}")
+                        </span>
+                    </span>
+                    <span class="flex gap-2">
+                        <form method="post" asp-action="Resend" asp-route-club="@slug" asp-route-invitationId="@invite.Id">
+                            <button type="submit" class="btn-secondary px-3 py-1">Resend</button>
+                        </form>
+                        <form method="post" asp-action="Revoke" asp-route-club="@slug" asp-route-invitationId="@invite.Id"
+                              data-confirm="Cancel the invitation to @invite.Email? The link in their email will stop working." data-confirm-title="Cancel invitation" data-confirm-button="Cancel invitation" data-confirm-danger="true">
+                            <button type="submit" class="btn-danger px-3 py-1">Cancel</button>
+                        </form>
+                    </span>
+                </li>
+            }
+        </ul>
+    </section>
+}
+
+<div class="card">
+    <div id="members-antiforgery">@Html.AntiForgeryToken()</div>
+    <table id="members-table" class="w-full text-sm" data-source="@Url.Action("Data", "Members", new { club = slug })">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Current teams</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section Scripts {
+    <script src="~/lib/datatables/js/dataTables.min.js"></script>
+    <script src="~/js/members.js" asp-append-version="true"></script>
+}

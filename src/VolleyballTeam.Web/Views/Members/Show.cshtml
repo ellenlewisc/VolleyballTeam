@@ -1,0 +1,85 @@
+@model MemberPageViewModel
+@{
+    var member = Model.Member;
+    var slug = Tenant.Club!.Slug;
+    ViewData["Title"] = $"{member.FirstName} {member.LastName}";
+    var canChange = !Model.IsSelf && member.Role != ClubRole.Owner;
+}
+
+<p class="mb-1 text-sm text-slate-500"><a class="hover:underline" asp-action="Index" asp-route-club="@slug">Users</a></p>
+<div class="mb-6 flex flex-wrap items-center gap-3">
+    <h1 class="text-2xl font-bold">@member.FirstName @member.LastName</h1>
+    @if (member.IsActive)
+    {
+        <span class="inline-block rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">Active</span>
+    }
+    else
+    {
+        <span class="inline-block rounded-full bg-slate-200 px-2.5 py-0.5 text-xs font-medium text-slate-700">Deactivated</span>
+    }
+</div>
+
+<div class="grid gap-6 lg:grid-cols-2">
+    <section class="card">
+        <h2 class="mb-4 text-lg font-semibold">Club access</h2>
+        <dl class="mb-4 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
+            <dt class="text-slate-500">Email</dt>
+            <dd>@member.Email</dd>
+            <dt class="text-slate-500">Role</dt>
+            <dd>@MembersController.DisplayRole(member.Role, member.Assignments.Any(a => a.SeasonStatus != SeasonStatus.Archived))</dd>
+        </dl>
+        <p class="mb-4 text-xs text-slate-500">Coaches are users on a team's staff. Add or remove them from a team on the team's page.</p>
+
+        @if (!canChange)
+        {
+            <p class="text-sm text-slate-500">@(Model.IsSelf ? "You can't change your own role or status." : "The club owner can't be changed or deactivated.")</p>
+        }
+        else
+        {
+            <form method="post" asp-action="ChangeRole" asp-route-club="@slug" asp-route-userId="@member.UserId" class="mb-4 flex flex-wrap items-end gap-3">
+                <div>
+                    <label class="form-label" for="role">Admin access</label>
+                    <select class="form-input" id="role" name="role">
+                        <option value="@ClubRole.Member" selected="@(member.Role == ClubRole.Member)">No: sees only their own teams</option>
+                        <option value="@ClubRole.Admin" selected="@(member.Role == ClubRole.Admin)">Yes: admin, manages the whole club</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-secondary">Save role</button>
+            </form>
+
+            @if (member.IsMembershipActive)
+            {
+                <form method="post" asp-action="Deactivate" asp-route-club="@slug" asp-route-userId="@member.UserId"
+                      data-confirm="Deactivate @member.FirstName @member.LastName? They lose access to this club right away. Their history stays." data-confirm-title="Deactivate member" data-confirm-button="Deactivate" data-confirm-danger="true">
+                    <button type="submit" class="btn-danger">Deactivate</button>
+                </form>
+            }
+            else
+            {
+                <form method="post" asp-action="Reactivate" asp-route-club="@slug" asp-route-userId="@member.UserId">
+                    <button type="submit" class="btn-primary">Reactivate</button>
+                </form>
+            }
+        }
+    </section>
+
+    <section class="card">
+        <h2 class="mb-4 text-lg font-semibold">Teams</h2>
+        @if (member.Assignments.Count == 0)
+        {
+            <p class="text-sm text-slate-600">Not on any team's staff.</p>
+        }
+        else
+        {
+            <ul class="divide-y divide-slate-100 text-sm">
+                @foreach (var assignment in member.Assignments)
+                {
+                    <li class="flex flex-wrap justify-between gap-2 py-2">
+                        <a class="font-medium text-club hover:underline" asp-controller="TeamSeasons" asp-action="Show" asp-route-club="@slug" asp-route-id="@assignment.TeamSeasonId">@assignment.TeamName (@assignment.SeasonName)</a>
+                        <span class="text-slate-500">@StaffRoleNames.Title(assignment.Role)</span>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+</div>
