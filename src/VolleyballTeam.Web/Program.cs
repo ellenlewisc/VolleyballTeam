@@ -9,6 +9,7 @@ using VolleyballTeam.Infrastructure;
 using VolleyballTeam.Infrastructure.Data;
 using VolleyballTeam.Infrastructure.Seeding;
 using VolleyballTeam.Web.Authorization;
+using VolleyballTeam.Web.Email;
 using VolleyballTeam.Web.Security;
 using VolleyballTeam.Web.Tenancy;
 
@@ -85,6 +86,10 @@ builder.Services.AddRouting(options =>
     options.LowercaseUrls = true;
     options.ConstraintMap.Add(ClubSlugRouteConstraint.Name, typeof(ClubSlugRouteConstraint));
 });
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<RazorViewRenderer>();
+builder.Services.AddScoped<AppEmails>();
 
 builder.Services.AddControllersWithViews(options => options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
 

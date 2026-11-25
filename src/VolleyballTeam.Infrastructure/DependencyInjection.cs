@@ -1,7 +1,10 @@
+using Azure.Communication.Email;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
+using VolleyballTeam.Infrastructure.Email;
 using VolleyballTeam.Infrastructure.Access;
 using VolleyballTeam.Infrastructure.Auditing;
 using VolleyballTeam.Infrastructure.Config;
@@ -43,9 +46,21 @@ public static class DependencyInjection
         services.AddScoped<RosterService>();
         services.AddScoped<RosterCsvService>();
         services.AddScoped<MemberStatusService>();
+        services.AddScoped<MemberService>();
+        services.AddScoped<InvitationService>();
 
         services.Configure<BootstrapOptions>(configuration.GetSection(BootstrapOptions.SectionName));
         services.AddScoped<BootstrapSeeder>();
+
+        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+        services.AddSingleton(provider => new Lazy<EmailClient>(() =>
+        {
+            var email = provider.GetRequiredService<IOptions<EmailOptions>>().Value;
+            return string.IsNullOrWhiteSpace(email.ConnectionString)
+                ? throw new InvalidOperationException("Email:ConnectionString is not configured.")
+                : new EmailClient(email.ConnectionString);
+        }));
+        services.AddScoped<EmailSender>();
 
         return services;
     }

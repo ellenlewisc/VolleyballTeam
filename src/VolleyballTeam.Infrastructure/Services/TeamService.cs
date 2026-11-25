@@ -24,7 +24,7 @@ public record TeamSeasonDetails(
     string? RolledOverFromName,
     IReadOnlyList<StaffMember> Staff);
 
-public record TeamRow(int Id, string Name, string? LatestDisplayName, string? LatestSeasonName, int SeasonCount);
+public record TeamRow(int Id, string Name, int? LatestTeamSeasonId, string? LatestDisplayName, string? LatestSeasonName, int SeasonCount);
 
 public record MemberOption(int UserId, string FullName);
 
@@ -171,6 +171,7 @@ public class TeamService(AppDbContext db, TeamSeasonAccessService access)
             .Select(t => new TeamRow(
                 t.Id,
                 t.Name,
+                t.Seasons.OrderByDescending(s => s.Season!.Name).Select(s => (int?)s.Id).FirstOrDefault(),
                 t.Seasons.OrderByDescending(s => s.Season!.Name).Select(s => s.DisplayName).FirstOrDefault(),
                 t.Seasons.OrderByDescending(s => s.Season!.Name).Select(s => s.Season!.Name).FirstOrDefault(),
                 t.Seasons.Count))

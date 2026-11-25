@@ -12,13 +12,20 @@
         return div.innerHTML;
     };
 
-    new DataTable(table, {
+    const teamFilter = document.querySelector('[data-players-team]');
+
+    const dataTable = new DataTable(table, {
         serverSide: true,
         processing: true,
         ajax: {
             url: table.dataset.source,
             type: 'POST',
             headers: { RequestVerificationToken: token },
+            data: function (request) {
+                if (teamFilter && teamFilter.value) {
+                    request.teamSeasonId = teamFilter.value;
+                }
+            },
         },
         layout: {
             top: 'search',
@@ -32,9 +39,13 @@
                 data: 'name',
                 name: 'name',
                 render: function (data, type, row) {
-                    return type === 'display'
+                    if (type !== 'display') {
+                        return data;
+                    }
+
+                    return row.url
                         ? '<a class="font-medium text-club hover:underline" href="' + escape(row.url) + '">' + escape(data) + '</a>'
-                        : data;
+                        : '<span class="font-medium">' + escape(data) + '</span>';
                 },
             },
             { data: 'gradYear', name: 'gradYear', defaultContent: '—' },
@@ -42,4 +53,10 @@
             { data: 'guardianCount', name: 'guardianCount', orderable: false },
         ],
     });
+
+    if (teamFilter) {
+        teamFilter.addEventListener('change', function () {
+            dataTable.ajax.reload();
+        });
+    }
 })();

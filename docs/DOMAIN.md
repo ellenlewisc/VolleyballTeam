@@ -82,7 +82,7 @@ erDiagram
 | `RosterEntry` | `TenantModel` | TeamSeasonId, PlayerId, JerseyNumber, PrimaryPosition, SecondaryPosition?, JoinedOn, LeftOn? |
 | `TeamEvent` *(slice 4)* | `TenantModel` | TeamSeasonId, `EventType`, StartUtc, EndUtc, Location, Opponent?, Notes? |
 | `Announcement` *(slice 5)* | `TenantModel` | TeamSeasonId, Title, Body, PublishedAt, EmailedAt?, RecipientCount |
-| `Invitation` *(slice 3)* | `TenantModel` | Email, TokenHash, ExpiresAt, AcceptedAt?, `ClubRole`, TeamSeasonId?, `StaffRole`? |
+| `Invitation` | `TenantModel` | Email, TokenHash, ExpiresAt, AcceptedAt?, `ClubRole`, TeamSeasonId?, `StaffRole`? |
 | `Drill` *(Phase 2)* | `TenantModel` | Name, Description, `SkillFocus`, DurationMinutes, MinPlayers, MaxPlayers, Equipment, `Intensity` |
 | `PracticePlan` *(Phase 2)* | `TenantModel` | TeamSeasonId, Title, Focus, `PlanStatus` |
 | `PracticePlanItem` *(Phase 2)* | `TenantModel` | PracticePlanId, DrillId, SortOrder, DurationMinutes, Notes |
@@ -131,6 +131,6 @@ Within a team season the user can edit:
 | Practice plans *(Phase 2)* | ✅ | ✅ | ✅ | view only |
 | Post announcements | ✅ | ✅ | ✅ | ✅ |
 | Start / archive seasons, roll over teams | ✅ | ❌ | ❌ | ❌ |
-| Invite staff *(slice 3)* | ✅ | ✅ | ❌ | ❌ |
+| Invite staff | ✅ | ✅ | ❌ | ❌ |
 
 All club members can view the drill library; coaches add drills and edit their own.

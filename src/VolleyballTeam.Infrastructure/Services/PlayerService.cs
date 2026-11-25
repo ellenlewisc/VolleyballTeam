@@ -11,7 +11,11 @@ public record PlayerHistoryRow(int TeamSeasonId, string TeamSeasonName, string S
 
 public record PlayerDetails(int Id, string FirstName, string LastName, int? GradYear, IReadOnlyList<GuardianRow> Guardians, IReadOnlyList<PlayerHistoryRow> History);
 
-public record PlayerDirectoryRow(int Id, string Name, int? GradYear, string CurrentTeams, int GuardianCount);
+public record PlayerDirectoryRow(int Id, string Name, int? GradYear, string CurrentTeams, int GuardianCount, int? RosterEntryId);
+
+// VisibleTeamSeasonIds is null for club admins (every player); otherwise players are limited to those team seasons.
+public record PlayerDirectoryQuery(
+    string? Search, string? SortBy, bool Descending, int Skip, int Take, int? TeamSeasonId, IReadOnlyCollection<int>? VisibleTeamSeasonIds);
 
 public record PagedResult<T>(int Total, int Filtered, IReadOnlyList<T> Rows);
 
@@ -22,12 +26,24 @@ public class PlayerService(AppDbContext db)
     public const string SortByName = "name";
     public const string SortByGradYear = "gradYear";
 
-    public async Task<PagedResult<PlayerDirectoryRow>> QueryDirectoryAsync(
-        string? search, string? sortBy, bool descending, int skip, int take, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<PlayerDirectoryRow>> QueryDirectoryAsync(PlayerDirectoryQuery query, CancellationToken cancellationToken = default)
     {
         var all = db.Players.AsQueryable();
-        var filtered = all;
+        if (query.VisibleTeamSeasonIds is { } visible)
+        {
+            all = all.Where(p => p.RosterEntries.Any(r => visible.Contains(r.TeamSeasonId)));
+        }
 
+        var filtered = all;
+        var teamSeasonId = query.TeamSeasonId;
+        if (teamSeasonId is not null)
+        {
+            // An archived team's roster is history, so it includes players who left; a current team shows who's on it now.
+            filtered = filtered.Where(p => p.RosterEntries.Any(r => r.TeamSeasonId == teamSeasonId
+                && (r.LeftOn == null || r.TeamSeason!.Season!.Status == SeasonStatus.Archived)));
+        }
+
+        var (search, sortBy, descending, skip, take) = (query.Search, query.SortBy, query.Descending, query.Skip, query.Take);
         if (!string.IsNullOrWhiteSpace(search))
         {
             var term = search.Trim();
@@ -56,13 +72,19 @@ public class PlayerService(AppDbContext db)
                     .Select(r => r.TeamSeason!.DisplayName)
                     .ToList(),
                 GuardianCount = p.Guardians.Count,
+                RosterEntryId = p.RosterEntries
+                    .Where(r => r.TeamSeasonId == teamSeasonId)
+                    .OrderBy(r => r.LeftOn != null)
+                    .ThenByDescending(r => r.JoinedOn)
+                    .Select(r => (int?)r.Id)
+                    .FirstOrDefault(),
             })
             .ToListAsync(cancellationToken);
 
         return new PagedResult<PlayerDirectoryRow>(
             await all.CountAsync(cancellationToken),
             await filtered.CountAsync(cancellationToken),
-            rows.Select(r => new PlayerDirectoryRow(r.Id, r.Name, r.GradYear, string.Join(", ", r.Teams), r.GuardianCount)).ToList());
+            rows.Select(r => new PlayerDirectoryRow(r.Id, r.Name, r.GradYear, string.Join(", ", r.Teams), r.GuardianCount, r.RosterEntryId)).ToList());
     }
 
     public async Task<PlayerDetails?> GetPlayerAsync(int playerId, CancellationToken cancellationToken = default)

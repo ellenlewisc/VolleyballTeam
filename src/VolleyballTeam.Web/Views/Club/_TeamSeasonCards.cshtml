@@ -11,7 +11,7 @@
                     <partial name="_SeasonStatusBadge" model="team.SeasonStatus" />
                     @if (team.StaffRole is not null)
                     {
-                        <span class="inline-block rounded-full bg-club/10 px-2.5 py-0.5 text-xs font-medium text-club">@team.StaffRole</span>
+                        <span class="inline-block rounded-full bg-club/10 px-2.5 py-0.5 text-xs font-medium text-club">@StaffRoleNames.Title(team.StaffRole)</span>
                     }
                 </span>
             </a>

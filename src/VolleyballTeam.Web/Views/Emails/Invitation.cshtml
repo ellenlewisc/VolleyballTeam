@@ -1,0 +1,14 @@
+@using VolleyballTeam.Web.Email
+@model InvitationEmailModel
+@{
+    Layout = "/Views/Emails/_EmailLayout.cshtml";
+    ViewData["Branding"] = Model.Branding;
+}
+<p style="margin:0 0 16px;">Hi,</p>
+<p style="margin:0 0 16px;"><strong>@Model.InviterName</strong> invited you to join <strong>@Model.Branding.ClubName</strong> as @Model.RoleDescription.</p>
+<p style="margin:0 0 24px;">
+    <a href="@Model.AcceptUrl" style="display:inline-block;background:@Model.Branding.PrimaryColor;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:6px;">Accept invitation</a>
+</p>
+<p style="margin:0 0 8px;font-size:13px;color:#475569;">This link works for @Model.ValidDays days. If the button doesn't work, paste this into your browser:</p>
+<p style="margin:0 0 16px;font-size:13px;word-break:break-all;"><a href="@Model.AcceptUrl" style="color:@Model.Branding.PrimaryColor;">@Model.AcceptUrl</a></p>
+<p style="margin:0;font-size:13px;color:#475569;">If you weren't expecting this, you can ignore this email.</p>

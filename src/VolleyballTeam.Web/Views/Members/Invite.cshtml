@@ -1,0 +1,71 @@
+@model InvitePageViewModel
+@{
+    ViewData["Title"] = "Invite";
+    var slug = Tenant.Club!.Slug;
+}
+
+<div class="card mx-auto max-w-lg">
+    <h1 class="mb-1 text-2xl font-bold">Invite someone</h1>
+    <p class="mb-6 text-sm text-slate-500">They'll get an email with a link to set a password. The link works for 7 days.</p>
+
+    <form method="post" asp-action="Invite" asp-route-club="@slug" class="space-y-4">
+        <div asp-validation-summary="ModelOnly"></div>
+
+        <div>
+            <label asp-for="Form.Email" class="form-label"></label>
+            <input asp-for="Form.Email" class="form-input" />
+            <span asp-validation-for="Form.Email"></span>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2">
+            <div>
+                <label asp-for="Form.FirstName" class="form-label"></label>
+                <input asp-for="Form.FirstName" class="form-input" />
+                <span asp-validation-for="Form.FirstName"></span>
+            </div>
+            <div>
+                <label asp-for="Form.LastName" class="form-label"></label>
+                <input asp-for="Form.LastName" class="form-input" />
+                <span asp-validation-for="Form.LastName"></span>
+            </div>
+        </div>
+
+        <div>
+            <label asp-for="Form.Role" class="form-label"></label>
+            <select asp-for="Form.Role" class="form-input" data-invite-role>
+                <option value="@UserRole.Member">Member: can sign in; add them to a team later</option>
+                <option value="@UserRole.Coach">Coach: works with one team</option>
+                <option value="@UserRole.Admin">Admin: manages seasons, teams, players and users</option>
+            </select>
+            <p class="mt-1 text-xs text-slate-500">Players and parents aren't users: players go on a roster, and parents are guardians on their player.</p>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2" data-invite-coach-fields>
+            <div>
+                <label asp-for="Form.TeamSeasonId" class="form-label"></label>
+                <select asp-for="Form.TeamSeasonId" class="form-input" asp-items="@(new SelectList(Model.Teams, nameof(TeamOption.Id), nameof(TeamOption.Name)))">
+                    <option value="">Choose a team…</option>
+                </select>
+                <span asp-validation-for="Form.TeamSeasonId"></span>
+            </div>
+            <div>
+                <label asp-for="Form.CoachingRole" class="form-label"></label>
+                <select asp-for="Form.CoachingRole" class="form-input">
+                    <option value="@StaffRole.HeadCoach">Head coach</option>
+                    <option value="@StaffRole.AssistantCoach">Assistant coach</option>
+                    <option value="@StaffRole.TeamManager">Team manager</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="submit" class="btn-primary">Send invitation</button>
+            <a class="btn-secondary" asp-action="Index" asp-route-club="@slug">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/invite.js" asp-append-version="true"></script>
+}

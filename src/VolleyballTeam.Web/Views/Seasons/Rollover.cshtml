@@ -85,7 +85,7 @@
                         {
                             <label class="flex items-center gap-2 text-sm">
                                 <input type="checkbox" name="Rows[@i].StaffUserIds" value="@staff.UserId" checked="@row.StaffUserIds.Contains(staff.UserId)" class="size-4 rounded border-slate-300" />
-                                @staff.FullName <span class="text-slate-500">(@staff.Role)</span>
+                                @staff.FullName <span class="text-slate-500">(@StaffRoleNames.Title(staff.Role))</span>
                             </label>
                         }
                     </div>
