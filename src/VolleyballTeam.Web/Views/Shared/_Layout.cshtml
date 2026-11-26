@@ -35,6 +35,7 @@
                     <a class="rounded-md px-3 py-1.5 font-semibold hover:bg-white/15" asp-controller="Seasons" asp-action="Index" asp-route-club="@club!.Slug">Seasons</a>
                     <a class="rounded-md px-3 py-1.5 font-semibold hover:bg-white/15" asp-controller="Teams" asp-action="Index" asp-route-club="@club!.Slug">Teams</a>
                     <a class="rounded-md px-3 py-1.5 font-semibold hover:bg-white/15" asp-controller="Members" asp-action="Index" asp-route-club="@club!.Slug">Users</a>
+                    <a class="rounded-md px-3 py-1.5 font-semibold hover:bg-white/15" asp-controller="ClubSettings" asp-action="Index" asp-route-club="@club!.Slug">Settings</a>
                 }
                 @if (club is not null && User.Identity?.IsAuthenticated == true)
                 {

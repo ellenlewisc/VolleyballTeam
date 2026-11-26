@@ -48,6 +48,8 @@ public static class DependencyInjection
         services.AddScoped<MemberStatusService>();
         services.AddScoped<MemberService>();
         services.AddScoped<InvitationService>();
+        services.AddScoped<ScheduleService>();
+        services.AddScoped<ClubService>();
 
         services.Configure<BootstrapOptions>(configuration.GetSection(BootstrapOptions.SectionName));
         services.AddScoped<BootstrapSeeder>();

@@ -80,7 +80,7 @@ erDiagram
 | `Player` | `TenantModel` | FirstName, LastName, GradYear? |
 | `Guardian` | `TenantModel` | PlayerId, FirstName, LastName, Email, Relationship, UnsubscribedAt?, UnsubscribeToken |
 | `RosterEntry` | `TenantModel` | TeamSeasonId, PlayerId, JerseyNumber, PrimaryPosition, SecondaryPosition?, JoinedOn, LeftOn? |
-| `TeamEvent` *(slice 4)* | `TenantModel` | TeamSeasonId, `EventType`, StartUtc, EndUtc, Location, Opponent?, Notes? |
+| `TeamEvent` | `TenantModel` | TeamSeasonId, `EventType`, Title?, StartUtc, EndUtc, Location?, Opponent? (games only), Notes?, CancelledAt? |
 | `Announcement` *(slice 5)* | `TenantModel` | TeamSeasonId, Title, Body, PublishedAt, EmailedAt?, RecipientCount |
 | `Invitation` | `TenantModel` | Email, TokenHash, ExpiresAt, AcceptedAt?, `ClubRole`, TeamSeasonId?, `StaffRole`? |
 | `Drill` *(Phase 2)* | `TenantModel` | Name, Description, `SkillFocus`, DurationMinutes, MinPlayers, MaxPlayers, Equipment, `Intensity` |
@@ -92,6 +92,8 @@ erDiagram
 `ClubId` is denormalized onto child rows so every tenant-owned table can be filtered directly, and children reference parents by `(ClubId, ParentId)` so the database rejects cross-club links ([ADR 0004](adr/0004-shared-database-multi-tenancy.md)).
 
 Nothing is hard-deleted ([ADR 0011](adr/0011-soft-delete-and-deactivation.md)). Removing a player from a roster sets `LeftOn` and keeps the entry.
+
+Event times are entered and shown in the club's time zone (`Club.TimeZoneId`, an IANA id set in Club settings) and stored in UTC. A weekly repeat creates separate events that keep the same local time across daylight-saving changes. A cancelled event keeps its row with `CancelledAt` set, so it still shows on the schedule, crossed out; deleting is for events added by mistake.
 
 ## Enums
 

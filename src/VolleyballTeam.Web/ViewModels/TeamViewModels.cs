@@ -9,7 +9,8 @@ public record TeamSeasonPageViewModel(
     TeamSeasonDetails Team,
     TeamSeasonAccess Access,
     IReadOnlyList<MemberOption> StaffCandidates,
-    AddStaffViewModel AddStaff);
+    AddStaffViewModel AddStaff,
+    IReadOnlyList<EventRow> NextEvents);
 
 public class AddStaffViewModel
 {

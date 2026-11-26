@@ -1,0 +1,84 @@
+@model EventFormViewModel
+@{
+    var team = Model.Team!;
+    var slug = Tenant.Club!.Slug;
+    var isNew = Model.EventId is null;
+    ViewData["Title"] = isNew ? "Add event" : "Edit event";
+    var types = Enum.GetValues<EventType>().Select(t => new SelectListItem(t.ToString(), t.ToString()));
+}
+
+<div class="card mx-auto max-w-2xl">
+    <p class="mb-1 text-sm text-slate-500">
+        <a class="hover:underline" asp-action="Index" asp-route-club="@slug" asp-route-id="@team.Id">@team.DisplayName schedule</a> · @team.SeasonName
+    </p>
+    <h1 class="mb-1 text-2xl font-bold">@ViewData["Title"]</h1>
+    <p class="mb-6 text-sm text-slate-500">Times are @ClubTime.Label(Tenant.Club.TimeZoneId) time.</p>
+
+    <form method="post" class="space-y-4" data-event-form
+          asp-action="@(isNew ? "Create" : "Edit")" asp-route-club="@slug" asp-route-id="@team.Id" asp-route-eventId="@Model.EventId">
+        <div asp-validation-summary="ModelOnly"></div>
+
+        <div class="grid gap-3 sm:grid-cols-2">
+            <div>
+                <label asp-for="Type" class="form-label"></label>
+                <select asp-for="Type" class="form-input" asp-items="types" data-event-type></select>
+            </div>
+            <div>
+                <label asp-for="Title" class="form-label"></label>
+                <input asp-for="Title" class="form-input" />
+                <span asp-validation-for="Title"></span>
+            </div>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2">
+            <div>
+                <label asp-for="StartsAt" class="form-label"></label>
+                <input asp-for="StartsAt" class="form-input" asp-format="{0:yyyy-MM-ddTHH:mm}" data-event-starts />
+                <span asp-validation-for="StartsAt"></span>
+            </div>
+            <div>
+                <label asp-for="EndsAt" class="form-label"></label>
+                <input asp-for="EndsAt" class="form-input" asp-format="{0:yyyy-MM-ddTHH:mm}" data-event-ends />
+                <span asp-validation-for="EndsAt"></span>
+            </div>
+        </div>
+
+        <div data-event-opponent>
+            <label asp-for="Opponent" class="form-label"></label>
+            <input asp-for="Opponent" class="form-input" />
+            <span asp-validation-for="Opponent"></span>
+        </div>
+
+        <div>
+            <label asp-for="Location" class="form-label"></label>
+            <input asp-for="Location" class="form-input" />
+            <span asp-validation-for="Location"></span>
+        </div>
+
+        <div>
+            <label asp-for="Notes" class="form-label"></label>
+            <textarea asp-for="Notes" class="form-input" rows="3" placeholder="Arrive 30 minutes early, bring both jerseys…"></textarea>
+            <span asp-validation-for="Notes"></span>
+        </div>
+
+        @if (isNew)
+        {
+            <div class="sm:w-1/2">
+                <label asp-for="RepeatUntil" class="form-label"></label>
+                <input asp-for="RepeatUntil" class="form-input" />
+                <span asp-validation-for="RepeatUntil"></span>
+                <p class="mt-1 text-xs text-slate-500">Optional. Adds the same event every week up to this date, e.g. Tuesday practices. Each one can be edited or cancelled on its own afterwards.</p>
+            </div>
+        }
+
+        <div class="flex gap-3">
+            <button type="submit" class="btn-primary">@(isNew ? "Add event" : "Save")</button>
+            <a class="btn-secondary" asp-action="Index" asp-route-club="@slug" asp-route-id="@team.Id">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/schedule.js" asp-append-version="true"></script>
+}

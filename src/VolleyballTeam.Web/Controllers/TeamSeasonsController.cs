@@ -18,6 +18,7 @@ public class TeamSeasonsController(
     TeamSeasonAccessService access,
     InvitationService invitations,
     MemberService members,
+    ScheduleService schedule,
     AppEmails emails,
     IAuthorizationService authorization) : ClubScopedController(tenant)
 {
@@ -211,7 +212,8 @@ public class TeamSeasonsController(
             ? await teams.GetStaffCandidatesAsync(id, cancellationToken)
             : [];
 
-        return View(nameof(Show), new TeamSeasonPageViewModel(team, userAccess, candidates, addStaff));
+        var nextEvents = await schedule.GetEventsAsync(id, past: false, take: 3, cancellationToken);
+        return View(nameof(Show), new TeamSeasonPageViewModel(team, userAccess, candidates, addStaff, nextEvents));
     }
 
     // Only club admins add people; coaches manage their roster but not who coaches.

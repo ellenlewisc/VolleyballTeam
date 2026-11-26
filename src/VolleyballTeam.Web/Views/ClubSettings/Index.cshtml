@@ -1,0 +1,35 @@
+@model ClubSettingsViewModel
+@{
+    ViewData["Title"] = "Club settings";
+    var slug = Tenant.Club!.Slug;
+}
+
+<div class="card mx-auto max-w-lg">
+    <h1 class="mb-1 text-2xl font-bold">Club settings</h1>
+    <p class="mb-6 text-sm text-slate-500">The time zone is used for every team's schedule.</p>
+
+    <form method="post" asp-action="Index" asp-route-club="@slug" class="space-y-4">
+        <div asp-validation-summary="ModelOnly"></div>
+
+        <div>
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-input" />
+            <span asp-validation-for="Name"></span>
+        </div>
+
+        <div>
+            <label asp-for="TimeZoneId" class="form-label"></label>
+            <select asp-for="TimeZoneId" class="form-input" asp-items="@(new SelectList(Model.TimeZones, nameof(TimeZoneChoice.Id), nameof(TimeZoneChoice.Label)))"></select>
+            <span asp-validation-for="TimeZoneId"></span>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="submit" class="btn-primary">Save</button>
+            <a class="btn-secondary" asp-controller="Club" asp-action="Index" asp-route-club="@slug">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

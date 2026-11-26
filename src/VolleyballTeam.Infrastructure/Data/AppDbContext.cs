@@ -21,6 +21,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, TenantContext 
     public DbSet<Guardian> Guardians => Set<Guardian>();
     public DbSet<RosterEntry> RosterEntries => Set<RosterEntry>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
+    public DbSet<TeamEvent> TeamEvents => Set<TeamEvent>();
 
     public int? CurrentClubId => tenant.ClubId;
 
@@ -44,6 +45,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, TenantContext 
         builder.ApplyConfiguration(new GuardianConfiguration());
         builder.ApplyConfiguration(new RosterEntryConfiguration());
         builder.ApplyConfiguration(new InvitationConfiguration());
+        builder.ApplyConfiguration(new TeamEventConfiguration());
         builder.ApplyConfiguration(new AppUserConfiguration());
 
         // Every entity must be listed here; QueryFilterCoverageTests fails the build if one is missed.
@@ -58,6 +60,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, TenantContext 
         ApplyTenantFilters<Guardian>(builder);
         ApplyTenantFilters<RosterEntry>(builder);
         ApplyTenantFilters<Invitation>(builder);
+        ApplyTenantFilters<TeamEvent>(builder);
     }
 
     private static void ConfigureBaseModel<TEntity>(ModelBuilder builder)

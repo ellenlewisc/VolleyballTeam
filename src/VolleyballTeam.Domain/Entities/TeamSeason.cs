@@ -14,4 +14,5 @@ public class TeamSeason : TenantModel
     public TeamSeason? RolledOverFrom { get; set; }
     public ICollection<TeamSeasonStaff> Staff { get; set; } = [];
     public ICollection<RosterEntry> Roster { get; set; } = [];
+    public ICollection<TeamEvent> Events { get; set; } = [];
 }

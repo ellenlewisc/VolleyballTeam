@@ -154,6 +154,21 @@ public class TenantIsolationTests(DatabaseFixture fixture)
     }
 
     [Fact]
+    public async Task Database_rejects_an_event_on_another_clubs_team_season()
+    {
+        await using var db = fixture.CreateContextFor(fixture.Alpha.Club);
+        db.TeamEvents.Add(new TeamEvent
+        {
+            TeamSeasonId = fixture.Bravo.TeamSeasonId,
+            Type = EventType.Practice,
+            StartUtc = new DateTime(2030, 1, 1, 18, 0, 0),
+            EndUtc = new DateTime(2030, 1, 1, 20, 0, 0),
+        });
+
+        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+    }
+
+    [Fact]
     public async Task Team_service_returns_nothing_for_a_user_outside_the_club()
     {
         await using var db = fixture.CreateContextFor(fixture.Bravo.Club);
