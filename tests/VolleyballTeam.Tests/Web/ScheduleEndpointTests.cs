@@ -27,6 +27,8 @@ public partial class ScheduleEndpointTests(DatabaseFixture fixture)
         }));
         var html = await (await client.GetAsync(schedulePath)).Content.ReadAsStringAsync();
 
+        Assert.Contains("Starts<span class=\"required-mark\"", form, StringComparison.Ordinal);
+        Assert.DoesNotContain("Title<span class=\"required-mark\"", form, StringComparison.Ordinal);
         Assert.Equal(HttpStatusCode.Redirect, saved.StatusCode);
         Assert.Contains("Add event", html, StringComparison.Ordinal);
         Assert.Contains($"Game vs {opponent}", html, StringComparison.Ordinal);

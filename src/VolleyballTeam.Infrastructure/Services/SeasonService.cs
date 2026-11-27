@@ -26,24 +26,53 @@ public class SeasonService(AppDbContext db, RosterService roster)
             .Select(s => new SeasonRow(s.Id, s.Name, s.StartsOn, s.EndsOn, s.Status, s.TeamSeasons.Count))
             .ToListAsync(cancellationToken);
 
+    public Task<SeasonRow?> GetSeasonAsync(int seasonId, CancellationToken cancellationToken = default) =>
+        db.Seasons
+            .Where(s => s.Id == seasonId)
+            .Select(s => new SeasonRow(s.Id, s.Name, s.StartsOn, s.EndsOn, s.Status, s.TeamSeasons.Count))
+            .SingleOrDefaultAsync(cancellationToken);
+
     public async Task<int> CreateSeasonAsync(string name, DateOnly? startsOn, DateOnly? endsOn, CancellationToken cancellationToken = default)
     {
         name = name.Trim();
-
-        if (startsOn is not null && endsOn is not null && endsOn < startsOn)
-        {
-            throw new BusinessRuleException("The season must end after it starts.");
-        }
-
-        if (await db.Seasons.AnyAsync(s => s.Name == name, cancellationToken))
-        {
-            throw new BusinessRuleException($"A season called \"{name}\" already exists.");
-        }
+        await ValidateAsync(null, name, startsOn, endsOn, cancellationToken);
 
         var season = new Season { Name = name, StartsOn = startsOn, EndsOn = endsOn, Status = SeasonStatus.Upcoming };
         db.Seasons.Add(season);
         await db.SaveChangesAsync(cancellationToken);
         return season.Id;
+    }
+
+    public async Task UpdateSeasonAsync(int seasonId, string name, DateOnly? startsOn, DateOnly? endsOn, CancellationToken cancellationToken = default)
+    {
+        var season = await db.Seasons.SingleOrDefaultAsync(s => s.Id == seasonId, cancellationToken)
+            ?? throw new BusinessRuleException("That season wasn't found.");
+
+        if (season.IsArchived)
+        {
+            throw new BusinessRuleException("This season is archived and read-only. Reopen it to make changes.");
+        }
+
+        name = name.Trim();
+        await ValidateAsync(seasonId, name, startsOn, endsOn, cancellationToken);
+
+        season.Name = name;
+        season.StartsOn = startsOn;
+        season.EndsOn = endsOn;
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task ValidateAsync(int? seasonId, string name, DateOnly? startsOn, DateOnly? endsOn, CancellationToken cancellationToken)
+    {
+        if (startsOn is not null && endsOn is not null && endsOn < startsOn)
+        {
+            throw new BusinessRuleException("The season must end after it starts.");
+        }
+
+        if (await db.Seasons.AnyAsync(s => s.Name == name && s.Id != seasonId, cancellationToken))
+        {
+            throw new BusinessRuleException($"A season called \"{name}\" already exists.");
+        }
     }
 
     public async Task SetStatusAsync(int seasonId, SeasonStatus target, CancellationToken cancellationToken = default)

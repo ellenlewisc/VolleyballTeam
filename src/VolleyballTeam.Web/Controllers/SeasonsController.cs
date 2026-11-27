@@ -17,11 +17,12 @@ public class SeasonsController(TenantContext tenant, SeasonService seasons) : Cl
         View(new SeasonsPageViewModel(await seasons.GetSeasonsAsync(cancellationToken)));
 
     [HttpGet("new")]
-    public IActionResult Create() => View(new SeasonCreateViewModel());
+    public IActionResult Create() => View("Form", new SeasonFormViewModel());
 
     [HttpPost("new")]
-    public async Task<IActionResult> Create(SeasonCreateViewModel model, CancellationToken cancellationToken)
+    public async Task<IActionResult> Create(SeasonFormViewModel model, CancellationToken cancellationToken)
     {
+        model.Id = null;
         if (ModelState.IsValid)
         {
             try
@@ -36,7 +37,40 @@ public class SeasonsController(TenantContext tenant, SeasonService seasons) : Cl
             }
         }
 
-        return View(model);
+        return View("Form", model);
+    }
+
+    [HttpGet("{id:int}/edit")]
+    public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
+    {
+        var season = await seasons.GetSeasonAsync(id, cancellationToken);
+        if (season is null)
+        {
+            return NotFound();
+        }
+
+        return View("Form", new SeasonFormViewModel { Id = season.Id, Name = season.Name, StartsOn = season.StartsOn, EndsOn = season.EndsOn });
+    }
+
+    [HttpPost("{id:int}/edit")]
+    public async Task<IActionResult> Edit(int id, SeasonFormViewModel model, CancellationToken cancellationToken)
+    {
+        model.Id = id;
+        if (ModelState.IsValid)
+        {
+            try
+            {
+                await seasons.UpdateSeasonAsync(id, model.Name, model.StartsOn, model.EndsOn, cancellationToken);
+                Flash($"Season {model.Name.Trim()} saved.");
+                return RedirectToAction(nameof(Index), new { club = ClubSlug });
+            }
+            catch (BusinessRuleException ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+            }
+        }
+
+        return View("Form", model);
     }
 
     [HttpPost("{id:int}/start")]

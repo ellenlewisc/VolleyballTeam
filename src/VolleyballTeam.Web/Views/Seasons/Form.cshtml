@@ -1,14 +1,17 @@
-@model SeasonCreateViewModel
+@model SeasonFormViewModel
 @{
-    ViewData["Title"] = "New season";
+    var isNew = Model.Id is null;
+    ViewData["Title"] = isNew ? "New season" : $"Edit {Model.Name}";
     var slug = Tenant.Club!.Slug;
 }
 
 <div class="card mx-auto max-w-lg">
-    <h1 class="mb-1 text-2xl font-bold">New season</h1>
-    <p class="mb-6 text-sm text-slate-500">It starts as Upcoming, so you can set up teams before it begins.</p>
+    <h1 class="mb-1 text-2xl font-bold">@(isNew ? "New season" : "Edit season")</h1>
+    <p class="mb-6 text-sm text-slate-500">
+        @(isNew ? "It starts as Upcoming, so you can set up teams before it begins." : "Dates are for reference; starting and archiving the season is done from the Seasons list.")
+    </p>
 
-    <form method="post" asp-action="Create" asp-route-club="@slug" class="space-y-4">
+    <form method="post" asp-action="@(isNew ? "Create" : "Edit")" asp-route-club="@slug" asp-route-id="@Model.Id" class="space-y-4">
         <div asp-validation-summary="ModelOnly"></div>
 
         <div>
@@ -31,7 +34,7 @@
         </div>
 
         <div class="flex gap-3">
-            <button type="submit" class="btn-primary">Create season</button>
+            <button type="submit" class="btn-primary">@(isNew ? "Create season" : "Save")</button>
             <a class="btn-secondary" asp-action="Index" asp-route-club="@slug">Cancel</a>
         </div>
     </form>
