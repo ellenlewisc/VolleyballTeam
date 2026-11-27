@@ -146,19 +146,8 @@ public class RosterService(AppDbContext db, TimeProvider clock)
         await db.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task EnsureEditableAsync(int teamSeasonId, CancellationToken cancellationToken)
-    {
-        var status = await db.TeamSeasons
-            .Where(t => t.Id == teamSeasonId)
-            .Select(t => (SeasonStatus?)t.Season!.Status)
-            .SingleOrDefaultAsync(cancellationToken)
-            ?? throw new BusinessRuleException("That team wasn't found.");
-
-        if (status == SeasonStatus.Archived)
-        {
-            throw new BusinessRuleException("This season is archived and read-only. An admin can reopen it.");
-        }
-    }
+    public Task EnsureEditableAsync(int teamSeasonId, CancellationToken cancellationToken) =>
+        db.EnsureTeamSeasonEditableAsync(teamSeasonId, cancellationToken);
 
     internal RosterEntry NewEntry(int teamSeasonId, RosterPlacement placement) => new()
     {

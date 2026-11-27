@@ -1,0 +1,94 @@
+@model SchedulePageViewModel
+@{
+    var team = Model.Team;
+    var slug = Tenant.Club!.Slug;
+    var timeZoneId = Tenant.Club.TimeZoneId;
+    ViewData["Title"] = $"{team.DisplayName} schedule";
+    var canEdit = Model.Access.CanEdit;
+}
+
+<div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <p class="mb-1 text-sm text-slate-500">
+            <a class="hover:underline" asp-controller="TeamSeasons" asp-action="Show" asp-route-club="@slug" asp-route-id="@team.Id">@team.DisplayName</a> · @team.SeasonName
+        </p>
+        <h1 class="text-2xl font-bold">Schedule</h1>
+    </div>
+    @if (canEdit)
+    {
+        <a class="btn-primary" asp-action="Create" asp-route-club="@slug" asp-route-id="@team.Id">Add event</a>
+    }
+</div>
+
+<div class="mb-4 flex flex-wrap items-center justify-between gap-2 text-sm">
+    @if (Model.ShowPast)
+    {
+        <a class="font-medium text-club hover:underline" asp-action="Index" asp-route-club="@slug" asp-route-id="@team.Id">Show upcoming events</a>
+    }
+    else
+    {
+        <a class="font-medium text-club hover:underline" asp-action="Index" asp-route-club="@slug" asp-route-id="@team.Id" asp-route-past="true">Show past events</a>
+    }
+    <span class="text-slate-500">
+        Times are @ClubTime.Label(timeZoneId) time.
+        @if (timeZoneId == "UTC" && Model.Access.IsClubAdmin)
+        {
+            <a class="font-medium text-club hover:underline" asp-controller="ClubSettings" asp-action="Index" asp-route-club="@slug">Set your club's time zone</a>
+        }
+    </span>
+</div>
+
+@if (Model.Events.Count == 0)
+{
+    <div class="card text-slate-600">@(Model.ShowPast ? "No past events." : "Nothing scheduled yet.")</div>
+}
+else
+{
+    foreach (var month in Model.Events.GroupBy(e => EventNames.Month(e.StartsLocal)))
+    {
+        <section class="mb-6">
+            <h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">@month.Key</h2>
+            <ul class="card divide-y divide-slate-100 p-0">
+                @foreach (var item in month)
+                {
+                    <li class="flex flex-wrap items-start justify-between gap-3 px-6 py-4 text-sm">
+                        <div class="min-w-0 flex-1">
+                            <partial name="_EventSummary" model="item" />
+                            @if (item.Opponent is not null && item.Title is not null)
+                            {
+                                <p class="mt-1 text-slate-600">vs @item.Opponent</p>
+                            }
+                            @if (item.Notes is not null)
+                            {
+                                <p class="mt-2 whitespace-pre-line text-slate-700">@item.Notes</p>
+                            }
+                        </div>
+                        @if (canEdit)
+                        {
+                            <div class="flex flex-wrap justify-end gap-2">
+                                <a class="btn-secondary px-3 py-1" asp-action="Edit" asp-route-club="@slug" asp-route-id="@team.Id" asp-route-eventId="@item.Id">Edit</a>
+                                @if (item.IsCancelled)
+                                {
+                                    <form method="post" asp-action="Reinstate" asp-route-club="@slug" asp-route-id="@team.Id" asp-route-eventId="@item.Id">
+                                        <button type="submit" class="btn-secondary px-3 py-1">Restore</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-action="Cancel" asp-route-club="@slug" asp-route-id="@team.Id" asp-route-eventId="@item.Id"
+                                          data-confirm="Mark @EventNames.Heading(item) on @EventNames.When(item) as cancelled? It stays on the schedule, crossed out." data-confirm-title="Cancel event" data-confirm-button="Mark cancelled" data-confirm-danger="true">
+                                        <button type="submit" class="btn-secondary px-3 py-1">Mark cancelled</button>
+                                    </form>
+                                }
+                                <form method="post" asp-action="Delete" asp-route-club="@slug" asp-route-id="@team.Id" asp-route-eventId="@item.Id"
+                                      data-confirm="Delete @EventNames.Heading(item) on @EventNames.When(item)? Use this for events added by mistake; use Mark cancelled if it was called off." data-confirm-title="Delete event" data-confirm-button="Delete" data-confirm-danger="true">
+                                    <button type="submit" class="btn-danger px-3 py-1">Delete</button>
+                                </form>
+                            </div>
+                        }
+                    </li>
+                }
+            </ul>
+        </section>
+    }
+}

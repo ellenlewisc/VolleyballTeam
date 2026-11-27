@@ -34,13 +34,23 @@ else
                 {
                     <tr>
                         <td class="px-4 py-3 font-medium">@season.Name</td>
-                        <td class="px-4 py-3 text-slate-600">@(season.StartsOn?.ToString("MMM d, yyyy") ?? "—") – @(season.EndsOn?.ToString("MMM d, yyyy") ?? "—")</td>
+                        <td class="px-4 py-3 text-slate-600">
+                            @if (season.StartsOn is null && season.EndsOn is null)
+                            {
+                                <span class="text-slate-400">Not set</span>
+                            }
+                            else
+                            {
+                                @(season.StartsOn?.ToString("MMM d, yyyy") ?? "?")<text> – </text>@(season.EndsOn?.ToString("MMM d, yyyy") ?? "?")
+                            }
+                        </td>
                         <td class="px-4 py-3">@season.TeamCount</td>
                         <td class="px-4 py-3"><partial name="_SeasonStatusBadge" model="season.Status" /></td>
                         <td class="px-4 py-3">
                             <div class="flex flex-wrap justify-end gap-2">
                                 @if (season.Status != SeasonStatus.Archived)
                                 {
+                                    <a class="btn-secondary px-3 py-1" asp-action="Edit" asp-route-club="@slug" asp-route-id="@season.Id">Edit</a>
                                     <a class="btn-secondary px-3 py-1" asp-action="Rollover" asp-route-club="@slug" asp-route-id="@season.Id">Roll teams in</a>
                                 }
                                 @if (season.Status == SeasonStatus.Upcoming)

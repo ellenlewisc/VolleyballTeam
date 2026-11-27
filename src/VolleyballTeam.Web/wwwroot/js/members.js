@@ -15,6 +15,7 @@
     new DataTable(table, {
         serverSide: true,
         processing: true,
+        searchDelay: 400,
         ajax: {
             url: table.dataset.source,
             type: 'POST',

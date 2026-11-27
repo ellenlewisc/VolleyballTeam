@@ -19,6 +19,7 @@
         </div>
     </div>
     <div class="flex flex-wrap gap-2">
+        <a class="btn-primary" asp-controller="Schedule" asp-action="Index" asp-route-club="@slug" asp-route-id="@team.Id">Schedule</a>
         <a class="btn-primary" asp-controller="Roster" asp-action="Index" asp-route-club="@slug" asp-route-id="@team.Id">Roster</a>
         @if (Model.Access.CanEdit)
         {
@@ -30,6 +31,28 @@
         }
     </div>
 </div>
+
+<section class="card mb-6">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-lg font-semibold">Next up</h2>
+        <a class="text-sm font-medium text-club hover:underline" asp-controller="Schedule" asp-action="Index" asp-route-club="@slug" asp-route-id="@team.Id">Full schedule</a>
+    </div>
+    @if (Model.NextEvents.Count == 0)
+    {
+        <p class="text-sm text-slate-600">Nothing scheduled yet.</p>
+    }
+    else
+    {
+        <ul class="divide-y divide-slate-100">
+            @foreach (var item in Model.NextEvents)
+            {
+                <li class="py-2 text-sm">
+                    <partial name="_EventSummary" model="item" />
+                </li>
+            }
+        </ul>
+    }
+</section>
 
 <div class="grid gap-6 md:grid-cols-2">
     <section class="card">

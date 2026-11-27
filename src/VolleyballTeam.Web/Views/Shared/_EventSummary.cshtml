@@ -1,0 +1,16 @@
+@model EventRow
+<div class="flex flex-wrap items-center gap-x-3 gap-y-1 @(Model.IsCancelled ? "text-slate-400" : "")">
+    <span class="inline-block rounded-full px-2 py-0.5 text-xs font-medium @EventNames.BadgeClasses(Model.Type)">@Model.Type</span>
+    <span class="font-medium @(Model.IsCancelled ? "line-through" : "")">@EventNames.Heading(Model)</span>
+    @if (Model.IsCancelled)
+    {
+        <span class="inline-block rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">Cancelled</span>
+    }
+</div>
+<p class="mt-1 @(Model.IsCancelled ? "text-slate-400" : "text-slate-600")">
+    @EventNames.When(Model)
+    @if (Model.Location is not null)
+    {
+        <span>· @Model.Location</span>
+    }
+</p>

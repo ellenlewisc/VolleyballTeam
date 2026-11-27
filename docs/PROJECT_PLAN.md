@@ -48,9 +48,9 @@ Delivered in slices, each its own pull request and migration:
 1. **Seasons and teams:** seasons (Upcoming, Active, Archived), teams that carry history, team seasons, staff, rollover, and history access rules ([ADR 0012](adr/0012-seasons-and-team-history.md))
 2. **Players and roster:** club player directory, roster per team season, guardian contacts, roster CSV import and export (CsvHelper)
 3. **Members, invitations and email:** member admin (roles, deactivation), staff invitations, password reset, Azure Communication Services email
-4. **Schedule:** practices, games, tournaments, with location and opponent, in the club time zone
+4. **Schedule:** practices, games, tournaments, with location and opponent, weekly repeats and cancellations, in the club time zone (set in Club settings)
 5. **Announcements:** posted to a team season and emailed to guardians and staff, with unsubscribe
-6. **Club branding:** name, colors, logo (Blob Storage with SAS)
+6. **Club branding:** colors and logo (Blob Storage with SAS), added to Club settings
 7. **Cleanup:** drop the Phase 0 team columns and table
 
 Parents and players don't log in during Phase 1; guardians are email contacts ([ADR 0013](adr/0013-guardians-as-contacts.md)).
